@@ -250,17 +250,22 @@
         </div>
     </div>
 
+    <!-- Hidden iframe untuk fallback POST -->
+    <iframe name="submit_frame" id="submit_frame" style="display:none;"></iframe>
+
     <script>
     (() => {
-        // Konfigurasi
-        const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbx-gqTO56TEKGUdm6i_cbyC6CaArn4IsQXEN_7esjq5MlHME-Z_5vDV67rSguhwZtgk/exec';
-        const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
+        // ========== KONFIGURASI ==========
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx-gqTO56TEKGUdm6i_cbyC6CaArn4IsQXEN_7esjq5MlHME-Z_5vDV67rSguhwZtgk/exec';
+        const IS_GAS_ENV = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
         const MAX_DOSEN = 2;
         const MAX_CHAR = 250;
 
+        // State
         let dosenCount = 1;
         let isSubmitting = false;
 
+        // DOM
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => document.querySelectorAll(s);
         const form = $('#proposalForm');
@@ -274,6 +279,7 @@
         const closeModalBtn = $('#closeModalBtn');
         const btnSubmit = $('#btnSubmit');
 
+        // Toast
         const showToast = (msg, type = 'success') => {
             const t = document.createElement('div');
             t.className = `toast ${type}`;
@@ -306,9 +312,10 @@
                 dosenDataList.appendChild(o);
             });
         };
-        if (IS_GAS) {
+        if (IS_GAS_ENV) {
             google.script.run.withSuccessHandler(populateDosenList).getDosenList();
         } else {
+            // Fallback contoh
             populateDosenList(['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari']);
         }
 
@@ -367,6 +374,7 @@
         }
         updateDosenUI();
 
+        // Validators
         const validators = {
             namaLengkap: v => v.trim().length>=3 ? '' : 'Nama minimal 3 karakter.',
             nim: v => /^20\d{2}03\d{3}$/.test(v.replace(/\D/g,'')) ? '' : 'Format NIM salah (202203001).',
@@ -406,6 +414,7 @@
             dosenCount=1; updateDosenUI();
         };
 
+        // Response handler
         const handleResponse = (resp) => {
             hideLoading();
             isSubmitting = false;
@@ -419,8 +428,8 @@
             }
         };
 
-        // Mode GAS: menggunakan google.script.run
-        const submitGAS = (payload) => {
+        // ========== SUBMIT VIA GAS ==========
+        const submitViaGAS = (payload) => {
             google.script.run
                 .withSuccessHandler(handleResponse)
                 .withFailureHandler(err => {
@@ -432,34 +441,50 @@
                 .processForm(payload);
         };
 
-        // Mode Standalone: fetch dengan Content-Type text/plain (tanpa preflight)
-        // Server HARUS mengembalikan header Access-Control-Allow-Origin
-        const submitStandalone = async (payload) => {
-            try {
-                const resp = await fetch(GAS_DEPLOY_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(payload)
-                });
-                // Baca respons sebagai teks terlebih dahulu
-                const text = await resp.text();
-                console.log('Response text:', text);
-                // Coba parse sebagai JSON
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (parseErr) {
-                    throw new Error('Respons bukan JSON. Isi: ' + text.substring(0, 200));
+        // ========== SUBMIT VIA IFRAME (STANDALONE) ==========
+        const submitViaIframe = (payload) => {
+            // Buat form yang akan dikirim ke iframe
+            const hf = document.createElement('form');
+            hf.method = 'POST';
+            hf.action = GAS_URL;
+            hf.target = 'submit_frame';
+            hf.enctype = 'application/x-www-form-urlencoded';
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'data';
+            inp.value = JSON.stringify(payload);
+            hf.appendChild(inp);
+            document.body.appendChild(hf);
+            hf.submit();
+            setTimeout(() => { if (document.body.contains(hf)) document.body.removeChild(hf); }, 2000);
+
+            // Fallback timeout jika postMessage tidak datang
+            setTimeout(() => {
+                if (isSubmitting) {
+                    hideLoading();
+                    isSubmitting = false;
+                    btnSubmit.disabled = false;
+                    showToast('⏳ Data sudah dikirim, tapi respons tidak diterima. Silakan cek spreadsheet.', 'error');
                 }
-                handleResponse(data);
-            } catch (err) {
-                hideLoading();
-                isSubmitting = false;
-                btnSubmit.disabled = false;
-                showToast('Gagal mengirim: ' + err.message, 'error');
-            }
+            }, 8000);
         };
 
+        // ========== LISTENER POSTMESSAGE ==========
+        window.addEventListener('message', (e) => {
+            // Hanya terima dari origin yang benar
+            if (e.origin !== 'https://script.google.com' && e.origin !== 'https://script.googleusercontent.com') return;
+            if (!isSubmitting) return;
+            try {
+                const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+                if (data && data.type === 'formResponse' && data.payload) {
+                    handleResponse(data.payload);
+                }
+            } catch (err) {
+                console.warn('Pesan tidak valid:', e.data);
+            }
+        });
+
+        // ========== SUBMIT HANDLER ==========
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (isSubmitting) return;
@@ -527,14 +552,14 @@
             btnSubmit.disabled = true;
             showLoading();
 
-            if (IS_GAS) {
-                submitGAS(payload);
+            if (IS_GAS_ENV) {
+                submitViaGAS(payload);
             } else {
-                submitStandalone(payload);
+                submitViaIframe(payload);
             }
         });
 
-        console.log('✅ Form siap. Mode:', IS_GAS ? 'GAS' : 'Standalone');
+        console.log('✅ Form siap. Mode:', IS_GAS_ENV ? 'GAS' : 'Standalone');
     })();
     </script>
 </body>
