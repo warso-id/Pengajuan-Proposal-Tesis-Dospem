@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan Proposal Tesis MIK S2</title>
-    <!-- Hindari error favicon 404 -->
     <link rel="icon" href="data:,">
-    <!-- Material Icons & Font -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -252,8 +250,8 @@
     <script>
         (() => {
             // === KONFIGURASI ===
-            // Ganti dengan URL deployment Apps Script Anda yang terbaru
-            const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
+            // URL deployment Apps Script yang sudah di-deploy ulang
+            const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwYTXEqqmbLdW5Oi48CEx-JBSrMUJ5z0XwSUAfcDLEIzvqO5OP-4zy_W-ygyoW3V47_/exec';
             const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
 
             // === DOM ELEMENTS ===
@@ -472,11 +470,10 @@
                         .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
-                    // Fetch dengan header CORS yang tepat
+                    // ** KIRIM DENGAN Content-Type: text/plain UNTUK MENGHINDARI PREFLIGHT CORS **
                     fetch(GAS_DEPLOY_URL, {
                         method: 'POST',
-                        mode: 'cors',         // Pastikan server mengizinkan
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'text/plain' },  // <-- PENTING!
                         body: JSON.stringify(formData)
                     })
                     .then(res => res.json())
@@ -484,7 +481,7 @@
                     .catch(err => {
                         hideLoading();
                         console.error('Fetch error:', err);
-                        toast('Gagal mengirim: ' + err.message + '. Pastikan URL deployment sudah benar dan server mengizinkan CORS.', 'error');
+                        toast('Gagal mengirim: ' + err.message, 'error');
                     });
                 }
             });
