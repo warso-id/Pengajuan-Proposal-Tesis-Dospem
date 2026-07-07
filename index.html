@@ -251,15 +251,28 @@
     </div>
 
     <script>
-    (() => {
+    (function() {
+        'use strict';
+        
+        // ============================================
+        // KONFIGURASI
+        // ============================================
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbwMFB3O3mWBG9A7_XTIVYPw1Dw7pTwoOHaq2dIiZa157xlSdfUe0lXs3rdK421rwyAg/exec';
         const MAX_DOSEN = 2;
         const MAX_CHAR = 250;
+        
+        // ============================================
+        // STATE
+        // ============================================
         let dosenCount = 1;
         let isSubmitting = false;
-
-        const $ = (s) => document.querySelector(s);
-        const $$ = (s) => document.querySelectorAll(s);
+        
+        // ============================================
+        // DOM SELECTORS
+        // ============================================
+        const $ = (selector) => document.querySelector(selector);
+        const $$ = (selector) => document.querySelectorAll(selector);
+        
         const form = $('#proposalForm');
         const loadingOverlay = $('#loadingOverlay');
         const toastContainer = $('#toastContainer');
@@ -270,234 +283,402 @@
         const successModal = $('#successModal');
         const closeModalBtn = $('#closeModalBtn');
         const btnSubmit = $('#btnSubmit');
-
-        const showToast = (msg, type = 'success') => {
-            const t = document.createElement('div');
-            t.className = `toast ${type}`;
-            t.innerHTML = `<span class="material-icons">${type==='success'?'check_circle':'error'}</span> ${msg}`;
+        
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function showToast(msg, type) {
+            type = type || 'success';
+            var t = document.createElement('div');
+            t.className = 'toast ' + type;
+            var icon = type === 'success' ? 'check_circle' : 'error';
+            t.innerHTML = '<span class="material-icons">' + icon + '</span> ' + msg;
             toastContainer.appendChild(t);
-            requestAnimationFrame(() => t.classList.add('show'));
-            setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 4000);
-        };
-
-        const showLoading = () => loadingOverlay.classList.add('active');
-        const hideLoading = () => loadingOverlay.classList.remove('active');
-        const showSuccessModal = () => successModal.classList.add('active');
-        const hideSuccessModal = () => successModal.classList.remove('active');
-        closeModalBtn.addEventListener('click', hideSuccessModal);
-        successModal.addEventListener('click', (e) => { if (e.target === successModal) hideSuccessModal(); });
-
-        // Semester
-        (() => {
-            const now = new Date(), m = now.getMonth()+1, y = now.getFullYear();
-            const sem = (m>=9 || m<=2) ? 'Ganjil' : 'Genap';
-            const ta = (m>=9) ? `${y}/${y+1}` : `${y-1}/${y}`;
-            semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
-        })();
-
-        // Dosen list (fallback lokal)
-        const populateDosenList = (arr) => {
-            dosenDataList.innerHTML = '';
-            (arr||[]).filter(n=>n&&String(n).trim()).forEach(n=>{
-                const o = document.createElement('option'); o.value = String(n).trim();
-                dosenDataList.appendChild(o);
+            requestAnimationFrame(function() {
+                t.classList.add('show');
             });
-        };
-        // Isi fallback jika server tidak merespons
-        populateDosenList(['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari']);
-
-        // Char counters
-        ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id=>{
-            const el = document.getElementById(id);
-            const counter = document.getElementById('counter'+id.charAt(0).toUpperCase()+id.slice(1));
-            el.addEventListener('input', ()=> counter.textContent = `${el.value.length}/${MAX_CHAR}`);
-        });
-
-        // Dosen rows
-        const updateDosenUI = () => {
-            const rows = dosenContainer.querySelectorAll('.dosen-row');
-            rows.forEach((row,idx)=>{
-                const inp = row.querySelector('.dosen-input');
-                if(inp){
-                    inp.id = `dosen${idx+1}`; inp.required = (idx===0);
-                }
-                const rmv = row.querySelector('.remove-dosen');
-                if(rmv) rmv.style.display = (dosenCount<=1 && idx===0) ? 'none' : 'flex';
-            });
-            btnAddDosen.disabled = dosenCount >= MAX_DOSEN;
-        };
-
-        const createDosenRow = (num) => {
-            const row = document.createElement('div'); row.className = 'dosen-row';
-            row.innerHTML = `
-                <div class="input-group">
-                    <label for="dosen${num}">Usulan Dosen Pembimbing ${num}</label>
-                    <input type="text" class="dosen-input" id="dosen${num}" list="dosenDataList" placeholder="Ketik atau pilih">
-                    <span class="error-text" id="errorDosen${num}"></span>
-                </div>
-                <button type="button" class="btn-icon remove-dosen" aria-label="Hapus dosen ${num}">-</button>`;
-            row.querySelector('.remove-dosen').addEventListener('click', ()=>{
-                if(dosenCount<=1){ showToast('Minimal 1 dosen','error'); return; }
-                row.remove(); dosenCount--; updateDosenUI();
-            });
-            return row;
-        };
-
-        btnAddDosen.addEventListener('click', ()=>{
-            if(dosenCount >= MAX_DOSEN) return;
-            dosenCount++; dosenContainer.appendChild(createDosenRow(dosenCount)); updateDosenUI();
-        });
-
-        const firstRow = $('#dosenRow1');
-        if(!firstRow.querySelector('.remove-dosen')){
-            const rmv = document.createElement('button'); rmv.type='button'; rmv.className='btn-icon remove-dosen';
-            rmv.setAttribute('aria-label','Hapus dosen 1'); rmv.textContent='-';
-            rmv.addEventListener('click', ()=>{
-                if(dosenCount<=1){ showToast('Minimal 1 dosen','error'); return; }
-                firstRow.remove(); dosenCount--; updateDosenUI();
-            });
-            firstRow.appendChild(rmv);
+            setTimeout(function() {
+                t.classList.remove('show');
+                setTimeout(function() {
+                    if (t.parentNode) t.parentNode.removeChild(t);
+                }, 400);
+            }, 4000);
         }
-        updateDosenUI();
-
-        // Validators
-        const validators = {
-            namaLengkap: v => v.trim().length>=3 ? '' : 'Nama minimal 3 karakter.',
-            nim: v => /^20\d{2}03\d{3}$/.test(v.replace(/\D/g,'')) ? '' : 'Format NIM salah (202203001).',
-            noHp: v => /^(08|628)\d{8,11}$/.test(v.replace(/[^0-9]/g,'')) ? '' : 'No HP tidak valid.',
-            email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? '' : 'Email tidak valid.',
-            judul: v => v.trim() ? '' : 'Judul wajib diisi.',
-            abstrak: v => v.trim() ? '' : 'Abstrak wajib diisi.',
-            pendahuluan: v => v.trim() ? '' : 'Pendahuluan wajib diisi.',
-            landasanTeori: v => v.trim() ? '' : 'Landasan teori wajib diisi.',
-            metodologi: v => v.trim() ? '' : 'Metodologi wajib diisi.',
-        };
-
-        const showFieldError = (id, msg) => {
-            const err = document.getElementById('error'+id.charAt(0).toUpperCase()+id.slice(1));
-            if(err){ err.textContent=msg; err.classList.add('visible'); }
-            document.getElementById(id)?.classList.add('error');
-        };
-        const clearAllErrors = () => {
-            $$('.error-text').forEach(e=>e.classList.remove('visible'));
-            $$('input.error, textarea.error').forEach(e=>e.classList.remove('error'));
-        };
-        Object.entries(validators).forEach(([id, fn])=>{
-            const el = document.getElementById(id);
-            if(el) el.addEventListener('input', ()=>{ if(fn(el.value)==='') {
-                document.getElementById('error'+id.charAt(0).toUpperCase()+id.slice(1))?.classList.remove('visible');
-                el.classList.remove('error');
-            }});
+        
+        function showLoading() {
+            loadingOverlay.classList.add('active');
+        }
+        
+        function hideLoading() {
+            loadingOverlay.classList.remove('active');
+        }
+        
+        function showSuccessModal() {
+            successModal.classList.add('active');
+        }
+        
+        function hideSuccessModal() {
+            successModal.classList.remove('active');
+        }
+        
+        function populateDosenList(arr) {
+            dosenDataList.innerHTML = '';
+            if (arr && arr.length) {
+                arr.forEach(function(name) {
+                    if (name && String(name).trim()) {
+                        var option = document.createElement('option');
+                        option.value = String(name).trim();
+                        dosenDataList.appendChild(option);
+                    }
+                });
+            }
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        // Set semester
+        (function() {
+            var now = new Date();
+            var month = now.getMonth() + 1;
+            var year = now.getFullYear();
+            var sem = (month >= 9 || month <= 2) ? 'Ganjil' : 'Genap';
+            var ta = (month >= 9) ? year + '/' + (year + 1) : (year - 1) + '/' + year;
+            semesterBadge.textContent = '\u{1F4C5} Semester ' + sem + ' ' + ta;
+        })();
+        
+        // Load dosen list dari server
+        function loadDosenList() {
+            // Fallback lokal dulu
+            populateDosenList([
+                
+            ]);
+            
+            // Coba ambil dari server
+            fetch(GAS_URL + '?action=getDosenList', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(function(text) {
+                try {
+                    var data = JSON.parse(text);
+                    if (data && data.success && data.dosenList && data.dosenList.length > 0) {
+                        populateDosenList(data.dosenList);
+                    }
+                } catch (e) {
+                    console.log('Menggunakan daftar dosen lokal');
+                }
+            })
+            .catch(function(error) {
+                console.log('Gagal memuat daftar dosen dari server, menggunakan lokal');
+            });
+        }
+        
+        loadDosenList();
+        
+        // Char counters
+        ['abstrak', 'pendahuluan', 'landasanTeori', 'metodologi'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            
+            var counterId = 'counter' + id.charAt(0).toUpperCase() + id.slice(1);
+            var counter = document.getElementById(counterId);
+            
+            if (counter) {
+                el.addEventListener('input', function() {
+                    counter.textContent = el.value.length + '/' + MAX_CHAR;
+                });
+            }
         });
-
-        const resetForm = () => {
+        
+        // Close modal handlers
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', hideSuccessModal);
+        }
+        if (successModal) {
+            successModal.addEventListener('click', function(e) {
+                if (e.target === successModal) hideSuccessModal();
+            });
+        }
+        
+        // ============================================
+        // DOSEN ROW MANAGEMENT
+        // ============================================
+        function updateDosenUI() {
+            var rows = dosenContainer.querySelectorAll('.dosen-row');
+            rows.forEach(function(row, idx) {
+                var inp = row.querySelector('.dosen-input');
+                if (inp) {
+                    inp.id = 'dosen' + (idx + 1);
+                    inp.required = (idx === 0);
+                }
+                var rmv = row.querySelector('.remove-dosen');
+                if (rmv) {
+                    rmv.style.display = (dosenCount <= 1 && idx === 0) ? 'none' : 'flex';
+                }
+            });
+            if (btnAddDosen) {
+                btnAddDosen.disabled = dosenCount >= MAX_DOSEN;
+            }
+        }
+        
+        function createDosenRow(num) {
+            var row = document.createElement('div');
+            row.className = 'dosen-row';
+            row.innerHTML = 
+                '<div class="input-group">' +
+                    '<label for="dosen' + num + '">Usulan Dosen Pembimbing ' + num + '</label>' +
+                    '<input type="text" class="dosen-input" id="dosen' + num + '" list="dosenDataList" placeholder="Ketik atau pilih">' +
+                    '<span class="error-text" id="errorDosen' + num + '"></span>' +
+                '</div>' +
+                '<button type="button" class="btn-icon remove-dosen" aria-label="Hapus dosen ' + num + '">-</button>';
+            
+            var removeBtn = row.querySelector('.remove-dosen');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    if (dosenCount <= 1) {
+                        showToast('Minimal 1 dosen pembimbing', 'error');
+                        return;
+                    }
+                    if (row.parentNode) row.parentNode.removeChild(row);
+                    dosenCount--;
+                    updateDosenUI();
+                });
+            }
+            
+            return row;
+        }
+        
+        if (btnAddDosen) {
+            btnAddDosen.addEventListener('click', function() {
+                if (dosenCount >= MAX_DOSEN) return;
+                dosenCount++;
+                dosenContainer.appendChild(createDosenRow(dosenCount));
+                updateDosenUI();
+            });
+        }
+        
+        // Setup remove button untuk row pertama
+        var firstRow = $('#dosenRow1');
+        if (firstRow) {
+            var existingRemove = firstRow.querySelector('.remove-dosen');
+            if (!existingRemove) {
+                var rmv = document.createElement('button');
+                rmv.type = 'button';
+                rmv.className = 'btn-icon remove-dosen';
+                rmv.setAttribute('aria-label', 'Hapus dosen 1');
+                rmv.textContent = '-';
+                rmv.addEventListener('click', function() {
+                    if (dosenCount <= 1) {
+                        showToast('Minimal 1 dosen pembimbing', 'error');
+                        return;
+                    }
+                    if (firstRow.parentNode) firstRow.parentNode.removeChild(firstRow);
+                    dosenCount--;
+                    updateDosenUI();
+                });
+                firstRow.appendChild(rmv);
+            }
+        }
+        
+        updateDosenUI();
+        
+        // ============================================
+        // VALIDATION
+        // ============================================
+        var validators = {
+            namaLengkap: function(v) { return v.trim().length >= 3 ? '' : 'Nama minimal 3 karakter.'; },
+            nim: function(v) { return /^20\d{2}03\d{3}$/.test(v.replace(/\D/g, '')) ? '' : 'Format NIM salah (contoh: 202203001).'; },
+            noHp: function(v) { return /^(08|628)\d{8,11}$/.test(v.replace(/[^0-9]/g, '')) ? '' : 'No HP tidak valid.'; },
+            email: function(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? '' : 'Email tidak valid.'; },
+            judul: function(v) { return v.trim() ? '' : 'Judul wajib diisi.'; },
+            abstrak: function(v) { return v.trim() ? '' : 'Abstrak wajib diisi.'; },
+            pendahuluan: function(v) { return v.trim() ? '' : 'Pendahuluan wajib diisi.'; },
+            landasanTeori: function(v) { return v.trim() ? '' : 'Landasan teori wajib diisi.'; },
+            metodologi: function(v) { return v.trim() ? '' : 'Metodologi wajib diisi.'; }
+        };
+        
+        function showFieldError(id, msg) {
+            var fieldName = 'error' + id.charAt(0).toUpperCase() + id.slice(1);
+            var err = document.getElementById(fieldName);
+            if (err) {
+                err.textContent = msg;
+                err.classList.add('visible');
+            }
+            var el = document.getElementById(id);
+            if (el) el.classList.add('error');
+        }
+        
+        function clearAllErrors() {
+            $$('.error-text').forEach(function(e) { e.classList.remove('visible'); });
+            $$('input.error, textarea.error').forEach(function(e) { e.classList.remove('error'); });
+        }
+        
+        // Real-time validation
+        Object.keys(validators).forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            
+            el.addEventListener('input', function() {
+                var msg = validators[id](el.value);
+                if (msg === '') {
+                    var fieldName = 'error' + id.charAt(0).toUpperCase() + id.slice(1);
+                    var errEl = document.getElementById(fieldName);
+                    if (errEl) errEl.classList.remove('visible');
+                    el.classList.remove('error');
+                }
+            });
+        });
+        
+        // ============================================
+        // FORM RESET
+        // ============================================
+        function resetForm() {
             form.reset();
             clearAllErrors();
-            $$('.char-counter').forEach(c=>c.textContent=`0/${MAX_CHAR}`);
-            dosenContainer.querySelectorAll('.dosen-row').forEach((r,i)=>{ if(i>0) r.remove(); });
-            dosenCount=1; updateDosenUI();
-        };
-
-        const handleResponse = (resp) => {
+            $$('.char-counter').forEach(function(c) { c.textContent = '0/' + MAX_CHAR; });
+            
+            var rows = dosenContainer.querySelectorAll('.dosen-row');
+            rows.forEach(function(row, idx) {
+                if (idx > 0 && row.parentNode) row.parentNode.removeChild(row);
+            });
+            dosenCount = 1;
+            updateDosenUI();
+        }
+        
+        // ============================================
+        // RESPONSE HANDLER
+        // ============================================
+        function handleResponse(resp) {
             hideLoading();
             isSubmitting = false;
-            btnSubmit.disabled = false;
-            if(resp?.success){
-                showToast('✅ Pengajuan berhasil dikirim!');
+            if (btnSubmit) btnSubmit.disabled = false;
+            
+            if (resp && resp.success) {
+                showToast('\u2705 Pengajuan berhasil dikirim!', 'success');
                 resetForm();
                 showSuccessModal();
             } else {
-                showToast('❌ '+(resp?.message||'Gagal menyimpan.'), 'error');
+                var msg = (resp && resp.message) ? resp.message : 'Gagal menyimpan data.';
+                showToast('\u274C ' + msg, 'error');
             }
-        };
-
-        // Submit via fetch dengan text/plain untuk menghindari preflight
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (isSubmitting) return;
-
-            clearAllErrors();
-            let valid = true, firstErr = null;
-
-            Object.entries(validators).forEach(([id, fn]) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const msg = fn(el.value);
-                if (msg) {
-                    showFieldError(id, msg);
+        }
+        
+        // ============================================
+        // FORM SUBMISSION
+        // ============================================
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (isSubmitting) return;
+                
+                clearAllErrors();
+                var valid = true;
+                var firstErr = null;
+                
+                // Validate semua field
+                Object.keys(validators).forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    var msg = validators[id](el.value);
+                    if (msg) {
+                        showFieldError(id, msg);
+                        valid = false;
+                        if (!firstErr) firstErr = el;
+                    }
+                });
+                
+                // Validate dosen
+                var dosenInputs = Array.from(dosenContainer.querySelectorAll('.dosen-input'));
+                var dosenList = dosenInputs.map(function(i) { return i.value.trim(); }).filter(function(v) { return v; });
+                
+                if (!dosenList.length) {
+                    showFieldError('dosen1', 'Minimal satu dosen wajib diisi.');
                     valid = false;
-                    if (!firstErr) firstErr = el;
-                }
-            });
-
-            const dosenInputs = Array.from(dosenContainer.querySelectorAll('.dosen-input'));
-            const dosenList = dosenInputs.map(i => i.value.trim()).filter(v => v);
-            if (!dosenList.length) {
-                showFieldError('dosen1', 'Minimal satu dosen.');
-                valid = false;
-                if (!firstErr) firstErr = document.getElementById('dosen1');
-            } else {
-                const low = dosenList.map(v => v.toLowerCase());
-                if (new Set(low).size < low.length) {
-                    const seen = new Set();
-                    for (let i = 0; i < low.length; i++) {
-                        if (seen.has(low[i])) {
-                            showFieldError(`dosen${i+1}`, 'Dosen duplikat.');
-                            valid = false;
-                            if (!firstErr) firstErr = document.getElementById(`dosen${i+1}`);
-                            break;
+                    if (!firstErr) firstErr = document.getElementById('dosen1');
+                } else {
+                    var low = dosenList.map(function(v) { return v.toLowerCase(); });
+                    if (new Set(low).size < low.length) {
+                        var seen = new Set();
+                        for (var i = 0; i < low.length; i++) {
+                            if (seen.has(low[i])) {
+                                showFieldError('dosen' + (i + 1), 'Dosen duplikat.');
+                                valid = false;
+                                if (!firstErr) firstErr = document.getElementById('dosen' + (i + 1));
+                                break;
+                            }
+                            seen.add(low[i]);
                         }
-                        seen.add(low[i]);
                     }
                 }
-            }
-
-            if (!valid) {
-                if (firstErr) { firstErr.focus(); firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-                return;
-            }
-
-            const payload = {
-                namaLengkap: document.getElementById('namaLengkap').value.trim(),
-                nim: document.getElementById('nim').value.replace(/\D/g, ''),
-                noHp: document.getElementById('noHp').value.replace(/[^0-9]/g, ''),
-                email: document.getElementById('email').value.trim(),
-                judul: document.getElementById('judul').value.trim(),
-                abstrak: document.getElementById('abstrak').value.trim(),
-                pendahuluan: document.getElementById('pendahuluan').value.trim(),
-                landasanTeori: document.getElementById('landasanTeori').value.trim(),
-                metodologi: document.getElementById('metodologi').value.trim(),
-                dosenPembimbing: dosenList,
-                semester: semesterBadge.textContent.includes('Ganjil') ? 'Ganjil' : 'Genap',
-                tahunAjaran: semesterBadge.textContent.match(/\d{4}\/\d{4}/)[0]
-            };
-
-            isSubmitting = true;
-            btnSubmit.disabled = true;
-            showLoading();
-
-            fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(payload)
-            })
-            .then(response => response.text())
-            .then(text => {
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    throw new Error('Respons tidak valid dari server');
+                
+                if (!valid) {
+                    if (firstErr) {
+                        firstErr.focus();
+                        firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
                 }
-                handleResponse(data);
-            })
-            .catch(err => {
-                hideLoading();
-                isSubmitting = false;
-                btnSubmit.disabled = false;
-                showToast('❌ Gagal mengirim: ' + err.message, 'error');
+                
+                // Build payload
+                var semesterText = semesterBadge.textContent;
+                var payload = {
+                    namaLengkap: document.getElementById('namaLengkap').value.trim(),
+                    nim: document.getElementById('nim').value.replace(/\D/g, ''),
+                    noHp: document.getElementById('noHp').value.replace(/[^0-9]/g, ''),
+                    email: document.getElementById('email').value.trim(),
+                    judul: document.getElementById('judul').value.trim(),
+                    abstrak: document.getElementById('abstrak').value.trim(),
+                    pendahuluan: document.getElementById('pendahuluan').value.trim(),
+                    landasanTeori: document.getElementById('landasanTeori').value.trim(),
+                    metodologi: document.getElementById('metodologi').value.trim(),
+                    dosenPembimbing: dosenList,
+                    semester: semesterText.indexOf('Ganjil') > -1 ? 'Ganjil' : 'Genap',
+                    tahunAjaran: (semesterText.match(/\d{4}\/\d{4}/) || ['2024/2025'])[0]
+                };
+                
+                isSubmitting = true;
+                if (btnSubmit) btnSubmit.disabled = true;
+                showLoading();
+                
+                // Kirim data
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(function(response) {
+                    return response.text();
+                })
+                .then(function(text) {
+                    var data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        throw new Error('Respons tidak valid dari server');
+                    }
+                    handleResponse(data);
+                })
+                .catch(function(err) {
+                    hideLoading();
+                    isSubmitting = false;
+                    if (btnSubmit) btnSubmit.disabled = false;
+                    showToast('\u274C Gagal mengirim: ' + err.message, 'error');
+                });
             });
-        });
+        }
+        
     })();
     </script>
 </body>
