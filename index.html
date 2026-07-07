@@ -8,10 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1a237e; --primary-light: #534bae; --accent: #ff6f00;
-            --surface: #fff; --surface-alt: #f5f5f5; --error: #d32f2f; --success: #2e7d32;
-            --text-primary: #212121; --text-secondary: #616161; --text-hint: #9e9e9e;
-            --border: #e0e0e0; --radius: 12px; --transition: 0.25s;
+            --primary: #1a237e;
+            --primary-light: #534bae;
+            --accent: #ff6f00;
+            --surface: #fff;
+            --surface-alt: #f5f5f5;
+            --error: #d32f2f;
+            --success: #2e7d32;
+            --text-primary: #212121;
+            --text-secondary: #616161;
+            --text-hint: #9e9e9e;
+            --border: #e0e0e0;
+            --radius: 12px;
+            --transition: 0.25s;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -45,6 +54,7 @@
         .toast.show { transform:translateX(0); }
         .toast.success { background:#2e7d32; }
         .toast.error { background:#c62828; }
+        .toast .material-icons { font-size:20px; }
 
         .main-card {
             width:100%; max-width:720px; background:var(--surface);
@@ -128,15 +138,11 @@
     </style>
 </head>
 <body>
-    <!-- Loading & Toast -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <span class="loading-text">Mengirim data...</span>
     </div>
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Iframe tersembunyi untuk POST cross-origin -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
     <div class="main-card">
         <div class="header">
@@ -243,10 +249,10 @@
     <script>
         (() => {
             // === KONFIGURASI ===
+            // URL deployment Apps Script (gunakan yang terbaru setelah deploy ulang)
             const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
             const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
 
-            // DOM elements
             const form = document.getElementById('proposalForm');
             const loading = document.getElementById('loadingOverlay');
             const toastCont = document.getElementById('toastContainer');
@@ -263,35 +269,36 @@
             const MAX_DOSEN = 2;
             let fileB64 = null, fileMime = null, fileName = null;
             let fileObjURL = null;
-            let submitTimeout = null; // Untuk menghentikan timeout jika respons sudah diterima
 
-            // Toast
+            // Toast notification
             function toast(msg, type='success') {
                 const t = document.createElement('div');
                 t.className = `toast ${type}`;
                 t.innerHTML = `<span class="material-icons">${type==='success'?'check_circle':'error'}</span> ${msg}`;
                 toastCont.appendChild(t);
                 setTimeout(() => t.classList.add('show'), 10);
-                setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 4000);
+                setTimeout(() => {
+                    t.classList.remove('show');
+                    setTimeout(() => t.remove(), 400);
+                }, 4000);
             }
             function showLoading() { loading.classList.add('active'); }
             function hideLoading() { loading.classList.remove('active'); }
 
             // Semester otomatis
-            (() => {
-                const now = new Date();
-                const m = now.getMonth()+1, y = now.getFullYear();
-                const sem = (m>=9 || m<=2) ? 'Ganjil' : 'Genap';
-                const ta = (m>=9) ? `${y}/${y+1}` : `${y-1}/${y}`;
-                semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
-            })();
+            const now = new Date();
+            const month = now.getMonth()+1, year = now.getFullYear();
+            const semester = (month>=9 || month<=2) ? 'Ganjil' : 'Genap';
+            const tahunAjaran = (month>=9) ? `${year}/${year+1}` : `${year-1}/${year}`;
+            semesterBadge.textContent = `📅 Semester ${semester} ${tahunAjaran}`;
 
             // Load daftar dosen
             if (IS_GAS) {
                 google.script.run.withSuccessHandler(arr => {
                     dosenDataList.innerHTML = '';
                     (arr || []).filter(n => n && String(n).trim()).forEach(n => {
-                        const o = document.createElement('option'); o.value = String(n).trim();
+                        const o = document.createElement('option');
+                        o.value = String(n).trim();
                         dosenDataList.appendChild(o);
                     });
                 }).getDosenList();
@@ -386,37 +393,6 @@
             function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
             function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-            // Fungsi untuk menghentikan timeout
-            function clearSubmitTimeout() {
-                if (submitTimeout) {
-                    clearTimeout(submitTimeout);
-                    submitTimeout = null;
-                }
-            }
-
-            // Handler respons universal (dipanggil dari postMessage atau GAS callback)
-            function handleResponse(resp) {
-                clearSubmitTimeout(); // hentikan timeout
-                hideLoading();
-                if (resp && resp.success) {
-                    toast('✅ Pengajuan berhasil dikirim!');
-                    form.reset();
-                    fileInfo.classList.remove('visible'); previewBtn.style.display = 'none'; fileB64 = null;
-                    document.querySelectorAll('.char-counter').forEach(c => c.textContent = '0/250');
-                } else {
-                    toast('❌ ' + (resp?.message || 'Gagal menyimpan.'), 'error');
-                }
-            }
-
-            // Listener pesan dari iframe (untuk mode standalone)
-            window.addEventListener('message', function(e) {
-                // Pastikan pesan berasal dari origin yang sama dengan URL Apps Script
-                if (e.origin !== new URL(GAS_DEPLOY_URL).origin) return;
-                if (e.data && typeof e.data === 'object' && e.data.success !== undefined) {
-                    handleResponse(e.data);
-                }
-            });
-
             // Submit handler
             form.addEventListener('submit', e => {
                 e.preventDefault();
@@ -447,7 +423,6 @@
 
                 if (!valid) return;
 
-                const semesterText = semesterBadge.textContent;
                 const formData = {
                     namaLengkap: nama, nim: nim.replace(/\D/g,''), noHp: hp.replace(/[^0-9]/g,''), email,
                     judul: document.getElementById('judul').value.trim(),
@@ -456,8 +431,8 @@
                     landasanTeori: document.getElementById('landasanTeori').value.trim(),
                     metodologi: document.getElementById('metodologi').value.trim(),
                     dosenPembimbing: dosenList,
-                    semester: semesterText.includes('Ganjil') ? 'Ganjil' : 'Genap',
-                    tahunAjaran: semesterText.match(/\d{4}\/\d{4}/)[0],
+                    semester: semester,
+                    tahunAjaran: tahunAjaran,
                     fileName, fileMime, fileBase64: fileB64
                 };
 
@@ -469,31 +444,35 @@
                         .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
-                    // Kirim via form POST ke iframe
-                    const hiddenForm = document.createElement('form');
-                    hiddenForm.method = 'POST';
-                    hiddenForm.action = GAS_DEPLOY_URL;
-                    hiddenForm.target = 'hidden_iframe';
-                    hiddenForm.enctype = 'application/x-www-form-urlencoded';
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'data';
-                    input.value = JSON.stringify(formData);
-                    hiddenForm.appendChild(input);
-                    document.body.appendChild(hiddenForm);
-                    hiddenForm.submit();
-                    setTimeout(() => { if (document.body.contains(hiddenForm)) document.body.removeChild(hiddenForm); }, 3000);
-
-                    // Fallback timeout: jika dalam 20 detik tidak ada respons, tampilkan pesan
-                    clearSubmitTimeout();
-                    submitTimeout = setTimeout(() => {
-                        if (loading.classList.contains('active')) {
-                            hideLoading();
-                            toast('⏳ Tidak ada respons dari server. Periksa koneksi dan coba lagi.', 'error');
-                        }
-                    }, 20000);
+                    // Fetch dengan Content-Type text/plain (tanpa preflight)
+                    fetch(GAS_DEPLOY_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(res => res.json())
+                    .then(handleResponse)
+                    .catch(err => {
+                        hideLoading();
+                        console.error('Fetch error:', err);
+                        toast('❌ Gagal terhubung ke server. Periksa koneksi dan coba lagi.', 'error');
+                    });
                 }
             });
+
+            function handleResponse(resp) {
+                hideLoading();
+                if (resp && resp.success) {
+                    toast('✅ Pengajuan berhasil dikirim! File telah diunggah ke Drive.');
+                    form.reset();
+                    fileInfo.classList.remove('visible');
+                    previewBtn.style.display = 'none';
+                    fileB64 = null;
+                    document.querySelectorAll('.char-counter').forEach(c => c.textContent = '0/250');
+                } else {
+                    toast('❌ ' + (resp?.message || 'Gagal menyimpan.'), 'error');
+                }
+            }
         })();
     </script>
 </body>
