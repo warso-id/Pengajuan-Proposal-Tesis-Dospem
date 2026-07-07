@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengajuan Proposal Tesis dan Dosen Pembimbing MIK S2</title>
+    <title>Pengajuan Proposal Tesis MIK S2</title>
+    <!-- Hindari error favicon 404 -->
+    <link rel="icon" href="data:,">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #1a237e;
             --primary-light: #534bae;
             --accent: #ff6f00;
-            --surface: #ffffff;
+            --surface: #fff;
             --surface-alt: #f5f5f5;
             --error: #d32f2f;
             --success: #2e7d32;
@@ -18,22 +20,19 @@
             --text-secondary: #616161;
             --text-hint: #9e9e9e;
             --border: #e0e0e0;
-            --radius-sm: 8px;
             --radius: 12px;
-            --radius-lg: 16px;
-            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.25s;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #e8eaf6, #c5cae9, #e3f2fd);
+            background: linear-gradient(135deg, #e8eaf6, #c5cae9);
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
             padding: 16px; color: var(--text-primary);
         }
-        /* Loading overlay */
         .loading-overlay {
-            position: fixed; top:0;left:0;width:100%;height:100%;
+            position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.6); z-index:9999;
             display:flex; align-items:center; justify-content:center;
             opacity:0; pointer-events:none; transition:0.3s;
@@ -41,17 +40,17 @@
         .loading-overlay.active { opacity:1; pointer-events:all; }
         .loading-spinner {
             width:64px; height:64px; border-radius:50%;
-            background: conic-gradient(transparent 0%, #fff 40%, #ffab40 70%, transparent 100%);
+            border:6px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color:#fff; margin-top:20px; font-weight:500; }
+        .loading-text { color:#fff; margin-top:16px; font-weight:500; }
 
-        /* Toast */
         .toast-container { position:fixed; top:24px; right:24px; z-index:10000; display:flex; flex-direction:column; gap:10px; }
         .toast {
             padding:14px 20px; border-radius:8px; color:#fff; font-weight:500;
-            font-size:14px; box-shadow:0 10px 20px rgba(0,0,0,0.2);
+            font-size:14px; box-shadow:0 8px 16px rgba(0,0,0,0.2);
             transform:translateX(120%); transition:0.35s;
             max-width:380px; display:flex; align-items:center; gap:10px;
         }
@@ -62,33 +61,35 @@
         .main-card {
             width:100%; max-width:720px; background:var(--surface);
             border-radius:16px; box-shadow:0 14px 28px rgba(0,0,0,0.2);
-            overflow:hidden;
+            overflow:hidden; margin-bottom:24px;
         }
         .header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            padding:20px 24px; text-align:center; position:relative; overflow:hidden;
+            background:linear-gradient(135deg, var(--primary), var(--primary-light));
+            padding:20px 24px; text-align:center; color:#fff;
         }
         .header-logo {
             width:70px; height:70px; border-radius:50%; object-fit:cover;
-            border:3px solid rgba(255,255,255,0.9); margin-bottom:10px; background:#fff; padding:4px;
+            border:3px solid rgba(255,255,255,0.9); margin-bottom:10px;
+            background:#fff; padding:4px;
         }
-        .header h1 { color:#fff; font-size:1.35rem; margin:0; }
-        .subtitle { color:rgba(255,255,255,0.85); font-size:0.85rem; margin-top:4px; }
+        .header h1 { font-size:1.35rem; margin:0; }
+        .subtitle { font-size:0.85rem; opacity:0.9; margin-top:4px; }
         .semester-badge {
-            display:inline-block; background:var(--accent); color:#fff; padding:6px 14px;
+            display:inline-block; background:var(--accent); padding:6px 14px;
             border-radius:20px; font-size:0.78rem; font-weight:600; margin-top:8px;
         }
-        .form-body { padding:24px 20px 28px; }
+        .form-body { padding:24px 20px; }
         .section-title {
-            font-size:1.05rem; font-weight:600; color:var(--primary); margin:20px 0 14px;
-            padding-bottom:8px; border-bottom:2px solid var(--primary); display:flex; align-items:center; gap:8px;
+            font-size:1.05rem; font-weight:600; color:var(--primary);
+            margin:24px 0 14px; padding-bottom:8px; border-bottom:2px solid var(--primary);
+            display:flex; align-items:center; gap:8px;
         }
         .input-group { margin-bottom:18px; }
         .input-group label { font-size:0.82rem; font-weight:500; color:var(--text-secondary); margin-bottom:5px; display:block; }
-        .required-star { color:var(--error); margin-left:2px; }
+        .required-star { color:var(--error); }
         .input-group input, .input-group textarea {
-            width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:8px;
-            font-size:0.95rem; background:var(--surface-alt); transition:0.25s; outline:none;
+            width:100%; padding:12px; border:2px solid var(--border); border-radius:8px;
+            font-size:0.95rem; background:var(--surface-alt); transition:var(--transition); outline:none;
         }
         .input-group input:focus, .input-group textarea:focus { border-color:var(--primary); background:#fff; }
         .error-text { font-size:0.72rem; color:var(--error); margin-top:4px; display:none; }
@@ -97,41 +98,44 @@
 
         .file-upload-area {
             border:2px dashed var(--border); border-radius:8px; padding:20px; text-align:center;
-            background:var(--surface-alt); cursor:pointer; transition:0.25s;
+            background:var(--surface-alt); cursor:pointer; transition:var(--transition);
         }
         .file-upload-area:hover { border-color:var(--primary-light); background:#e8eaf6; }
         .file-info {
-            display:none; align-items:center; gap:10px; margin-top:8px; padding:12px;
-            background:#e8f5e9; border-radius:8px; font-size:0.82rem; color:#1b5e20;
+            display:none; align-items:center; gap:10px; margin-top:8px;
+            padding:12px; background:#e8f5e9; border-radius:8px; font-size:0.82rem; color:#1b5e20;
         }
-        .file-info.visible { display:flex; }
+        .file-info.visible { display:flex; flex-wrap:wrap; }
         .file-preview-btn {
-            background:var(--primary); color:#fff; padding:8px 16px; border-radius:20px;
+            background:var(--primary); color:#fff; padding:6px 16px; border-radius:20px;
             text-decoration:none; font-size:0.78rem; display:none; align-items:center; gap:6px;
         }
         .dosen-container { display:flex; flex-direction:column; gap:12px; }
         .dosen-row { display:flex; align-items:center; gap:10px; }
         .dosen-row .input-group { flex:1; margin-bottom:0; }
         .btn-icon {
-            width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
-            display:flex; align-items:center; justify-content:center; background:#ffebee; color:#c62828;
+            width:38px; height:38px; border-radius:50%; border:none; background:#ffebee; color:#c62828;
+            cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px;
         }
         .btn-add-dosen {
             display:inline-flex; align-items:center; gap:6px; padding:10px 18px;
             border:2px dashed var(--primary-light); border-radius:20px; color:var(--primary);
             background:transparent; cursor:pointer; font-weight:500; margin-top:8px;
         }
+        .btn-add-dosen:disabled { opacity:0.4; cursor:not-allowed; }
         .btn-submit {
             display:inline-flex; align-items:center; gap:10px; padding:14px 40px;
             background:var(--accent); color:#fff; border:none; border-radius:28px;
             font-size:1rem; font-weight:600; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.2);
+            transition:0.25s;
         }
-        .btn-submit:hover { background:#ffa040; }
-        .footer-note { text-align:center; font-size:0.72rem; color:var(--text-hint); padding:8px; }
+        .btn-submit:hover { background:#ffa040; transform:translateY(-2px); }
+        .footer-note { text-align:center; font-size:0.72rem; color:var(--text-hint); padding:0 20px 12px; }
 
         @media (max-width:600px) {
             .header h1 { font-size:1.15rem; }
             .btn-submit { width:100%; padding:14px 20px; }
+            .dosen-row { flex-wrap:wrap; }
         }
     </style>
 </head>
@@ -151,57 +155,59 @@
         </div>
         <div class="form-body">
             <form id="proposalForm" novalidate>
+                <!-- A. Data Diri -->
                 <div class="section-title"><span class="material-icons">person</span> A. Data Diri</div>
                 <div class="input-group">
-                    <label for="namaLengkap">1. Nama Lengkap <span class="required-star">*</span></label>
+                    <label>1. Nama Lengkap <span class="required-star">*</span></label>
                     <input type="text" id="namaLengkap" placeholder="Masukkan nama lengkap" maxlength="150" required>
-                    <span class="error-text" id="errorNamaLengkap">Nama lengkap wajib diisi (min 3 karakter).</span>
+                    <span class="error-text" id="errorNamaLengkap"></span>
                 </div>
                 <div class="input-group">
-                    <label for="nim">2. NIM <span class="required-star">*</span></label>
+                    <label>2. NIM <span class="required-star">*</span></label>
                     <input type="text" id="nim" placeholder="Contoh: 202203001" maxlength="9" required>
-                    <span class="error-text" id="errorNim">NIM harus 9 digit (tahun+kode prodi 03+nomor urut).</span>
+                    <span class="error-text" id="errorNim"></span>
                 </div>
                 <div class="input-group">
-                    <label for="noHp">3. No. HP <span class="required-star">*</span></label>
-                    <input type="tel" id="noHp" placeholder="08xx..." required>
-                    <span class="error-text" id="errorNoHp">Gunakan format 08xx atau 628xx (10-13 digit).</span>
+                    <label>3. No. HP <span class="required-star">*</span></label>
+                    <input type="tel" id="noHp" placeholder="08xxxxxxxxxx" required>
+                    <span class="error-text" id="errorNoHp"></span>
                 </div>
                 <div class="input-group">
-                    <label for="email">4. Email <span class="required-star">*</span></label>
+                    <label>4. Email <span class="required-star">*</span></label>
                     <input type="email" id="email" placeholder="contoh@email.com" required>
-                    <span class="error-text" id="errorEmail">Format email tidak valid.</span>
+                    <span class="error-text" id="errorEmail"></span>
                 </div>
 
+                <!-- B. Data Proposal -->
                 <div class="section-title"><span class="material-icons">description</span> B. Data Proposal</div>
                 <div class="input-group">
-                    <label for="judul">1. Judul Proposal <span class="required-star">*</span></label>
-                    <input type="text" id="judul" placeholder="Masukkan judul proposal" required>
-                    <span class="error-text" id="errorJudul">Judul wajib diisi.</span>
+                    <label>1. Judul Proposal <span class="required-star">*</span></label>
+                    <input type="text" id="judul" placeholder="Masukkan judul" required>
+                    <span class="error-text" id="errorJudul"></span>
                 </div>
                 <div class="input-group">
-                    <label for="abstrak">2. Abstrak (Max 250 karakter) <span class="required-star">*</span></label>
+                    <label>2. Abstrak (Max 250 karakter) <span class="required-star">*</span></label>
                     <textarea id="abstrak" rows="3" maxlength="250" required></textarea>
                     <span class="char-counter" id="counterAbstrak">0/250</span>
-                    <span class="error-text" id="errorAbstrak">Abstrak wajib diisi.</span>
+                    <span class="error-text" id="errorAbstrak"></span>
                 </div>
                 <div class="input-group">
-                    <label for="pendahuluan">3. Pendahuluan (Max 250 karakter) <span class="required-star">*</span></label>
+                    <label>3. Pendahuluan (Max 250 karakter) <span class="required-star">*</span></label>
                     <textarea id="pendahuluan" rows="3" maxlength="250" required></textarea>
                     <span class="char-counter" id="counterPendahuluan">0/250</span>
-                    <span class="error-text" id="errorPendahuluan">Pendahuluan wajib diisi.</span>
+                    <span class="error-text" id="errorPendahuluan"></span>
                 </div>
                 <div class="input-group">
-                    <label for="landasanTeori">4. Landasan Teori (Max 250 karakter) <span class="required-star">*</span></label>
+                    <label>4. Landasan Teori (Max 250 karakter) <span class="required-star">*</span></label>
                     <textarea id="landasanTeori" rows="3" maxlength="250" required></textarea>
                     <span class="char-counter" id="counterLandasanTeori">0/250</span>
-                    <span class="error-text" id="errorLandasanTeori">Landasan teori wajib diisi.</span>
+                    <span class="error-text" id="errorLandasanTeori"></span>
                 </div>
                 <div class="input-group">
-                    <label for="metodologi">5. Metodologi (Max 250 karakter) <span class="required-star">*</span></label>
+                    <label>5. Metodologi (Max 250 karakter) <span class="required-star">*</span></label>
                     <textarea id="metodologi" rows="3" maxlength="250" required></textarea>
                     <span class="char-counter" id="counterMetodologi">0/250</span>
-                    <span class="error-text" id="errorMetodologi">Metodologi wajib diisi.</span>
+                    <span class="error-text" id="errorMetodologi"></span>
                 </div>
 
                 <!-- Upload File -->
@@ -217,10 +223,10 @@
                         <span id="fileName"></span> (<span id="fileSize"></span>)
                         <a class="file-preview-btn" id="previewBtn" href="#" target="_blank">Pratinjau</a>
                     </div>
-                    <span class="error-text" id="errorFile">File wajib diupload.</span>
+                    <span class="error-text" id="errorFile"></span>
                 </div>
 
-                <!-- Dosen -->
+                <!-- C. Dosen Pembimbing -->
                 <div class="section-title"><span class="material-icons">school</span> C. Data Dosen Pembimbing</div>
                 <datalist id="dosenDataList"></datalist>
                 <div class="dosen-container" id="dosenContainer">
@@ -228,28 +234,29 @@
                         <div class="input-group">
                             <label>Usulan Dosen Pembimbing 1 <span class="required-star">*</span></label>
                             <input type="text" class="dosen-input" list="dosenDataList" placeholder="Ketik atau pilih" required>
+                            <span class="error-text" id="errorDosen1"></span>
                         </div>
                     </div>
                 </div>
-                <button type="button" class="btn-add-dosen" id="btnAddDosen">+ Tambah Dosen</button>
+                <button type="button" class="btn-add-dosen" id="btnAddDosen">+ Tambah Dosen Pembimbing</button>
 
                 <div style="text-align:center; margin-top:28px;">
                     <button type="submit" class="btn-submit" id="btnSubmit">Kirim Pengajuan</button>
                 </div>
             </form>
-            <p class="footer-note">* Data tersimpan di spreadsheet & file diunggah ke Drive.</p>
+            <p class="footer-note">* Data tersimpan otomatis di spreadsheet & file diunggah ke Google Drive.</p>
         </div>
     </div>
 
     <script>
-        (function() {
-            // Konfigurasi URL deployment (dapat diubah sesuai deployment terbaru)
+        (() => {
+            // Ganti dengan URL deployment Apps Script Anda
             const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
             const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
 
             const form = document.getElementById('proposalForm');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const toastContainer = document.getElementById('toastContainer');
+            const loading = document.getElementById('loadingOverlay');
+            const toastCont = document.getElementById('toastContainer');
             const dosenContainer = document.getElementById('dosenContainer');
             const btnAddDosen = document.getElementById('btnAddDosen');
             const fileProposal = document.getElementById('fileProposal');
@@ -261,97 +268,110 @@
 
             let dosenCount = 1;
             const MAX_DOSEN = 2;
-            let uploadedFileBase64 = null, uploadedFileMime = null, uploadedFileName = null;
-            let currentFileObjectURL = null;
+            let fileB64 = null, fileMime = null, fileName = null;
+            let fileObjURL = null;
 
             // Toast
-            function showToast(msg, type='success') {
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.innerHTML = `<span class="material-icons">${type==='success'?'check_circle':'error'}</span> ${msg}`;
-                toastContainer.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 10);
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 400);
-                }, 4000);
+            function toast(msg, type='success') {
+                const t = document.createElement('div');
+                t.className = `toast ${type}`;
+                t.innerHTML = `<span class="material-icons">${type==='success'?'check_circle':'error'}</span> ${msg}`;
+                toastCont.appendChild(t);
+                setTimeout(() => t.classList.add('show'), 10);
+                setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 4000);
             }
-            function showLoading() { loadingOverlay.classList.add('active'); }
-            function hideLoading() { loadingOverlay.classList.remove('active'); }
+            function showLoading() { loading.classList.add('active'); }
+            function hideLoading() { loading.classList.remove('active'); }
 
             // Semester
-            (function() {
+            (() => {
                 const now = new Date();
-                const month = now.getMonth()+1, year = now.getFullYear();
-                let sem = (month>=9 || month<=2) ? 'Ganjil' : 'Genap';
-                let ta = (month>=9) ? `${year}/${year+1}` : `${year-1}/${year}`;
+                const m = now.getMonth()+1, y = now.getFullYear();
+                const sem = (m>=9 || m<=2) ? 'Ganjil' : 'Genap';
+                const ta = (m>=9) ? `${y}/${y+1}` : `${y-1}/${y}`;
                 semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
             })();
 
-            // Load daftar dosen
-            function loadDosenList() {
-                if (IS_GAS) {
-                    google.script.run.withSuccessHandler(populate).getDosenList();
-                } else {
-                    // Fallback data contoh
-                    populate(['Prof. Dr. Budi Santoso', 'Dr. Ani Widyastuti', 'Dr. Cahyo Nugroho', 'Prof. Dr. Dewi Lestari']);
-                }
-            }
-            function populate(arr) {
-                dosenDataList.innerHTML = '';
-                arr.filter(n=>n&&String(n).trim()).forEach(n => {
-                    const opt = document.createElement('option');
-                    opt.value = String(n).trim();
-                    dosenDataList.appendChild(opt);
+            // Load dosen list
+            if (IS_GAS) {
+                google.script.run.withSuccessHandler(arr => {
+                    dosenDataList.innerHTML = '';
+                    (arr || []).filter(n => n && String(n).trim()).forEach(n => {
+                        const o = document.createElement('option');
+                        o.value = String(n).trim();
+                        dosenDataList.appendChild(o);
+                    });
+                }).getDosenList();
+            } else {
+                // Fallback contoh
+                ['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari'].forEach(n => {
+                    const o = document.createElement('option'); o.value = n;
+                    dosenDataList.appendChild(o);
                 });
             }
-            loadDosenList();
 
-            // Character counter
+            // Character counters
             ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
                 const el = document.getElementById(id);
                 const counter = document.getElementById('counter' + id.charAt(0).toUpperCase()+id.slice(1));
-                el.addEventListener('input', () => {
-                    counter.textContent = `${el.value.length}/250`;
-                });
+                el.addEventListener('input', () => counter.textContent = `${el.value.length}/250`);
             });
 
-            // File upload & preview
-            fileProposal.addEventListener('change', function(e) {
-                const file = e.target.files[0];
+            // File handling
+            fileProposal.addEventListener('change', function() {
+                const file = this.files[0];
                 errorFile.classList.remove('visible');
+                fileInfo.classList.remove('visible');
+                previewBtn.style.display = 'none';
                 if (!file) return;
-                if (!file.type.match(/pdf|msword|wordprocessingml/) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
-                    errorFile.textContent = 'Format tidak didukung.'; errorFile.classList.add('visible');
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (!['pdf','doc','docx'].includes(ext) && !file.type.match(/pdf|msword|wordprocessingml/)) {
+                    errorFile.textContent = 'Format file tidak didukung.';
+                    errorFile.classList.add('visible');
                     return;
                 }
                 if (file.size > 10*1024*1024) {
-                    errorFile.textContent = 'Ukuran maks 10MB.'; errorFile.classList.add('visible');
+                    errorFile.textContent = 'Ukuran file maksimal 10MB.';
+                    errorFile.classList.add('visible');
                     return;
                 }
-                if (currentFileObjectURL) URL.revokeObjectURL(currentFileObjectURL);
-                currentFileObjectURL = URL.createObjectURL(file);
-                previewBtn.href = currentFileObjectURL; previewBtn.style.display = 'inline-flex';
+                if (fileObjURL) URL.revokeObjectURL(fileObjURL);
+                fileObjURL = URL.createObjectURL(file);
+                previewBtn.href = fileObjURL;
+                previewBtn.style.display = 'inline-flex';
                 const reader = new FileReader();
-                reader.onload = function(ev) {
-                    uploadedFileBase64 = ev.target.result.split(',')[1];
-                    uploadedFileMime = file.type;
-                    uploadedFileName = file.name;
+                reader.onload = ev => {
+                    fileB64 = ev.target.result.split(',')[1];
+                    fileMime = file.type;
+                    fileName = file.name;
                     document.getElementById('fileName').textContent = file.name;
-                    document.getElementById('fileSize').textContent = (file.size/1024/1024).toFixed(2)+' MB';
+                    document.getElementById('fileSize').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
                     fileInfo.classList.add('visible');
                 };
                 reader.readAsDataURL(file);
+            });
+
+            // Drag & drop
+            const uploadArea = document.getElementById('fileUploadArea');
+            uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#1a237e'; });
+            uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#e0e0e0'; });
+            uploadArea.addEventListener('drop', e => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#e0e0e0';
+                if (e.dataTransfer.files.length) {
+                    fileProposal.files = e.dataTransfer.files;
+                    fileProposal.dispatchEvent(new Event('change'));
+                }
             });
 
             // Dosen management
             function updateDosenUI() {
                 const rows = dosenContainer.querySelectorAll('.dosen-row');
                 rows.forEach((row, idx) => {
-                    const input = row.querySelector('input');
-                    input.id = 'dosen'+(idx+1);
-                    input.name = 'dosen'+(idx+1);
-                    input.required = (idx === 0);
+                    const inp = row.querySelector('input');
+                    inp.id = 'dosen'+(idx+1);
+                    inp.name = 'dosen'+(idx+1);
+                    inp.required = (idx === 0);
                 });
                 btnAddDosen.disabled = dosenCount >= MAX_DOSEN;
             }
@@ -367,20 +387,19 @@
                     </div>
                     <button type="button" class="btn-icon remove">-</button>
                 `;
-                row.querySelector('.remove').addEventListener('click', () => {
-                    row.remove(); dosenCount--;
-                    updateDosenUI();
-                });
+                row.querySelector('.remove').addEventListener('click', () => { row.remove(); dosenCount--; updateDosenUI(); });
                 dosenContainer.appendChild(row);
                 updateDosenUI();
             });
-            // Hapus di dosen 1
-            document.querySelector('#dosenRow1').insertAdjacentHTML('beforeend', '<button type="button" class="btn-icon remove" style="margin-left:10px">-</button>');
-            document.querySelector('#dosenRow1 .remove').addEventListener('click', function() {
-                if (dosenCount <= 1) { showToast('Minimal 1 Dosen','error'); return; }
-                this.parentElement.remove(); dosenCount--;
-                updateDosenUI();
+            // Tombol hapus dosen pertama
+            const row1 = document.getElementById('dosenRow1');
+            const btnRemove1 = document.createElement('button');
+            btnRemove1.type = 'button'; btnRemove1.className = 'btn-icon remove'; btnRemove1.textContent = '-';
+            btnRemove1.addEventListener('click', () => {
+                if (dosenCount <= 1) { toast('Minimal 1 dosen','error'); return; }
+                row1.remove(); dosenCount--; updateDosenUI();
             });
+            row1.appendChild(btnRemove1);
             updateDosenUI();
 
             // Validasi
@@ -388,41 +407,43 @@
             function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
             function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-            // Submit
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', e => {
                 e.preventDefault();
+                // Bersihkan error sebelumnya
+                document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
                 let valid = true;
-                const setError = (id, msg) => {
+                const setErr = (id, msg) => {
                     document.getElementById('error'+id).textContent = msg;
                     document.getElementById('error'+id).classList.add('visible');
                     valid = false;
                 };
-                // Clear errors
-                document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
 
                 const nama = document.getElementById('namaLengkap').value.trim();
-                if (nama.length < 3) setError('NamaLengkap','Nama minimal 3 karakter.');
+                if (nama.length < 3) setErr('NamaLengkap', 'Nama lengkap minimal 3 karakter.');
                 const nim = document.getElementById('nim').value.trim();
-                if (!validateNIM(nim)) setError('Nim','NIM tidak valid.');
+                if (!validateNIM(nim)) setErr('Nim', 'Format NIM salah (contoh: 202203001).');
                 const hp = document.getElementById('noHp').value.trim();
-                if (!validateHP(hp)) setError('NoHp','No HP tidak valid.');
+                if (!validateHP(hp)) setErr('NoHp', 'No HP tidak valid (08xx / 628xx).');
                 const email = document.getElementById('email').value.trim();
-                if (!validateEmail(email)) setError('Email','Email tidak valid.');
-                if (!document.getElementById('judul').value.trim()) setError('Judul','Judul wajib diisi.');
+                if (!validateEmail(email)) setErr('Email', 'Format email salah.');
+                if (!document.getElementById('judul').value.trim()) setErr('Judul', 'Judul wajib diisi.');
                 ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
-                    if (!document.getElementById(id).value.trim()) setError(id.charAt(0).toUpperCase()+id.slice(1), 'Wajib diisi.');
+                    if (!document.getElementById(id).value.trim()) setErr(id.charAt(0).toUpperCase()+id.slice(1), 'Wajib diisi.');
                 });
-                if (!uploadedFileBase64) {
-                    errorFile.textContent = 'File wajib diupload.'; errorFile.classList.add('visible'); valid = false;
+                if (!fileB64) {
+                    errorFile.textContent = 'File proposal wajib diupload.';
+                    errorFile.classList.add('visible');
+                    valid = false;
                 }
                 const dosenInputs = dosenContainer.querySelectorAll('.dosen-input');
-                if (!dosenInputs[0].value.trim()) {
-                    setError('Dosen','Dosen 1 wajib diisi.'); // dummy error, bisa diatur lebih spesifik
+                const dosenList = Array.from(dosenInputs).map(inp => inp.value.trim()).filter(v=>v);
+                if (dosenList.length === 0) {
+                    setErr('Dosen1', 'Minimal satu dosen pembimbing.');
                 }
 
                 if (!valid) return;
 
-                const dosenList = Array.from(dosenInputs).map(inp => inp.value.trim()).filter(v=>v);
+                const semesterText = semesterBadge.textContent;
                 const formData = {
                     namaLengkap: nama,
                     nim: nim.replace(/\D/g,''),
@@ -434,22 +455,18 @@
                     landasanTeori: document.getElementById('landasanTeori').value.trim(),
                     metodologi: document.getElementById('metodologi').value.trim(),
                     dosenPembimbing: dosenList,
-                    semester: semesterBadge.textContent.includes('Ganjil') ? 'Ganjil' : 'Genap',
-                    tahunAjaran: semesterBadge.textContent.match(/\d{4}\/\d{4}/)[0],
-                    fileName: uploadedFileName,
-                    fileMime: uploadedFileMime,
-                    fileBase64: uploadedFileBase64
+                    semester: semesterText.includes('Ganjil') ? 'Ganjil' : 'Genap',
+                    tahunAjaran: semesterText.match(/\d{4}\/\d{4}/)[0],
+                    fileName, fileMime, fileBase64: fileB64
                 };
 
                 showLoading();
-
                 if (IS_GAS) {
                     google.script.run
                         .withSuccessHandler(handleResponse)
-                        .withFailureHandler(err => { hideLoading(); showToast('Error: '+err.message,'error'); })
+                        .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
-                    // Fetch dengan Content-Type 'text/plain' untuk hindari preflight
                     fetch(GAS_DEPLOY_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain' },
@@ -457,21 +474,21 @@
                     })
                     .then(res => res.json())
                     .then(handleResponse)
-                    .catch(err => { hideLoading(); showToast('Gagal: '+err.message,'error'); });
+                    .catch(err => { hideLoading(); toast('Gagal mengirim: '+err.message, 'error'); });
                 }
             });
 
             function handleResponse(resp) {
                 hideLoading();
                 if (resp && resp.success) {
-                    showToast('✅ Berhasil dikirim!');
+                    toast('✅ Pengajuan berhasil dikirim!');
                     form.reset();
                     fileInfo.classList.remove('visible');
                     previewBtn.style.display = 'none';
-                    uploadedFileBase64 = null;
-                    // Reset counters etc.
+                    fileB64 = null;
+                    document.querySelectorAll('.char-counter').forEach(c => c.textContent = '0/250');
                 } else {
-                    showToast('❌ ' + (resp?.message || 'Gagal'), 'error');
+                    toast('❌ ' + (resp?.message || 'Gagal menyimpan.'), 'error');
                 }
             }
         })();
