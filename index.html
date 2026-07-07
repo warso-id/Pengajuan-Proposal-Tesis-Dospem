@@ -435,7 +435,6 @@
 
         /* ========== RESPONSE HANDLER ========== */
         const handleResponse = (resp) => {
-            // Hentikan timeout jika masih aktif
             if (activeTimeout) {
                 clearTimeout(activeTimeout);
                 activeTimeout = null;
@@ -459,9 +458,13 @@
             if (e.origin !== 'https://script.google.com' && e.origin !== 'https://script.googleusercontent.com') return;
             if (isSubmitting && e.data) {
                 try {
-                    // Data bisa berupa string (JSON) atau objek
+                    // Parsing jika data berupa string JSON
                     const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-                    if (data && typeof data === 'object' && ('success' in data)) {
+                    // Sekarang data memiliki struktur {type: 'formResponse', payload: {success, message, ...}}
+                    if (data && data.type === 'formResponse' && data.payload) {
+                        handleResponse(data.payload);
+                    } else if (data && 'success' in data) {
+                        // fallback jika tidak sesuai struktur baru
                         handleResponse(data);
                     }
                 } catch (err) {
@@ -507,7 +510,7 @@
 
                 // Set timeout untuk fallback jika tidak ada respons
                 activeTimeout = setTimeout(() => {
-                    if (!isSubmitting) return; // sudah di-handle
+                    if (!isSubmitting) return;
                     if (attempt < CONFIG.RETRY_ATTEMPTS) {
                         console.log(`Tidak ada respons, mencoba ulang (${attempt+1}/${CONFIG.RETRY_ATTEMPTS})`);
                         submitData(formData, attempt + 1);
