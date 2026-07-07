@@ -8,26 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1a237e;
-            --primary-light: #534bae;
-            --accent: #ff6f00;
-            --surface: #fff;
-            --surface-alt: #f5f5f5;
-            --error: #d32f2f;
-            --success: #2e7d32;
-            --text-primary: #212121;
-            --text-secondary: #616161;
-            --text-hint: #9e9e9e;
-            --border: #e0e0e0;
-            --radius: 12px;
-            --transition: 0.25s;
+            --primary: #1a237e; --primary-light: #534bae; --accent: #ff6f00;
+            --surface: #fff; --surface-alt: #f5f5f5; --error: #d32f2f; --success: #2e7d32;
+            --text-primary: #212121; --text-secondary: #616161; --text-hint: #9e9e9e;
+            --border: #e0e0e0; --radius: 12px; --transition: 0.25s;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(135deg, #e8eaf6, #c5cae9);
-            min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; display: flex; flex-direction: column; align-items: center;
             padding: 16px; color: var(--text-primary);
         }
         .loading-overlay {
@@ -39,8 +29,7 @@
         .loading-overlay.active { opacity:1; pointer-events:all; }
         .loading-spinner {
             width:64px; height:64px; border-radius:50%;
-            border:6px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
+            border:6px solid rgba(255,255,255,0.3); border-top-color: #fff;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -50,8 +39,8 @@
         .toast {
             padding:14px 20px; border-radius:8px; color:#fff; font-weight:500;
             font-size:14px; box-shadow:0 8px 16px rgba(0,0,0,0.2);
-            transform:translateX(120%); transition:0.35s;
-            max-width:380px; display:flex; align-items:center; gap:10px;
+            transform:translateX(120%); transition:0.35s; max-width:380px;
+            display:flex; align-items:center; gap:10px;
         }
         .toast.show { transform:translateX(0); }
         .toast.success { background:#2e7d32; }
@@ -139,11 +128,15 @@
     </style>
 </head>
 <body>
+    <!-- Loading & Toast -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <span class="loading-text">Mengirim data...</span>
     </div>
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Iframe tersembunyi untuk POST cross-origin -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
     <div class="main-card">
         <div class="header">
@@ -250,11 +243,10 @@
     <script>
         (() => {
             // === KONFIGURASI ===
-            // URL deployment Apps Script yang sudah di-deploy ulang
-            const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbwYTXEqqmbLdW5Oi48CEx-JBSrMUJ5z0XwSUAfcDLEIzvqO5OP-4zy_W-ygyoW3V47_/exec';
+            const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
             const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
 
-            // === DOM ELEMENTS ===
+            // DOM elements
             const form = document.getElementById('proposalForm');
             const loading = document.getElementById('loadingOverlay');
             const toastCont = document.getElementById('toastContainer');
@@ -272,7 +264,7 @@
             let fileB64 = null, fileMime = null, fileName = null;
             let fileObjURL = null;
 
-            // === TOAST ===
+            // Toast
             function toast(msg, type='success') {
                 const t = document.createElement('div');
                 t.className = `toast ${type}`;
@@ -284,7 +276,7 @@
             function showLoading() { loading.classList.add('active'); }
             function hideLoading() { loading.classList.remove('active'); }
 
-            // === SEMESTER OTOMATIS ===
+            // Semester otomatis
             (() => {
                 const now = new Date();
                 const m = now.getMonth()+1, y = now.getFullYear();
@@ -293,13 +285,12 @@
                 semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
             })();
 
-            // === LOAD DOSEN LIST ===
+            // Load daftar dosen
             if (IS_GAS) {
                 google.script.run.withSuccessHandler(arr => {
                     dosenDataList.innerHTML = '';
                     (arr || []).filter(n => n && String(n).trim()).forEach(n => {
-                        const o = document.createElement('option');
-                        o.value = String(n).trim();
+                        const o = document.createElement('option'); o.value = String(n).trim();
                         dosenDataList.appendChild(o);
                     });
                 }).getDosenList();
@@ -310,42 +301,34 @@
                 });
             }
 
-            // === CHARACTER COUNTERS ===
+            // Character counters
             ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
                 const el = document.getElementById(id);
                 const counter = document.getElementById('counter' + id.charAt(0).toUpperCase()+id.slice(1));
                 el.addEventListener('input', () => counter.textContent = `${el.value.length}/250`);
             });
 
-            // === FILE HANDLING ===
+            // File handling
             fileProposal.addEventListener('change', function() {
                 const file = this.files[0];
-                errorFile.classList.remove('visible');
-                fileInfo.classList.remove('visible');
-                previewBtn.style.display = 'none';
+                errorFile.classList.remove('visible'); fileInfo.classList.remove('visible'); previewBtn.style.display = 'none';
                 if (!file) return;
                 const ext = file.name.split('.').pop().toLowerCase();
                 if (!['pdf','doc','docx'].includes(ext) && !file.type.match(/pdf|msword|wordprocessingml/)) {
-                    errorFile.textContent = 'Format file tidak didukung.';
-                    errorFile.classList.add('visible');
-                    return;
+                    errorFile.textContent = 'Format file tidak didukung.'; errorFile.classList.add('visible'); return;
                 }
                 if (file.size > 10*1024*1024) {
-                    errorFile.textContent = 'Ukuran file maksimal 10MB.';
-                    errorFile.classList.add('visible');
-                    return;
+                    errorFile.textContent = 'Ukuran file maksimal 10MB.'; errorFile.classList.add('visible'); return;
                 }
                 if (fileObjURL) URL.revokeObjectURL(fileObjURL);
                 fileObjURL = URL.createObjectURL(file);
-                previewBtn.href = fileObjURL;
-                previewBtn.style.display = 'inline-flex';
+                previewBtn.href = fileObjURL; previewBtn.style.display = 'inline-flex';
                 const reader = new FileReader();
                 reader.onload = ev => {
                     fileB64 = ev.target.result.split(',')[1];
-                    fileMime = file.type;
-                    fileName = file.name;
+                    fileMime = file.type; fileName = file.name;
                     document.getElementById('fileName').textContent = file.name;
-                    document.getElementById('fileSize').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
+                    document.getElementById('fileSize').textContent = (file.size/1024/1024).toFixed(2)+' MB';
                     fileInfo.classList.add('visible');
                 };
                 reader.readAsDataURL(file);
@@ -354,23 +337,21 @@
             // Drag & drop
             const uploadArea = document.getElementById('fileUploadArea');
             uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#1a237e'; });
-            uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = '#e0e0e0'; });
+            uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = '#e0e0e0');
             uploadArea.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#e0e0e0';
+                e.preventDefault(); uploadArea.style.borderColor = '#e0e0e0';
                 if (e.dataTransfer.files.length) {
                     fileProposal.files = e.dataTransfer.files;
                     fileProposal.dispatchEvent(new Event('change'));
                 }
             });
 
-            // === DOSEN MANAGEMENT ===
+            // Dosen management
             function updateDosenUI() {
                 const rows = dosenContainer.querySelectorAll('.dosen-row');
                 rows.forEach((row, idx) => {
                     const inp = row.querySelector('input');
-                    inp.id = 'dosen'+(idx+1);
-                    inp.name = 'dosen'+(idx+1);
+                    inp.id = 'dosen'+(idx+1); inp.name = 'dosen'+(idx+1);
                     inp.required = (idx === 0);
                 });
                 btnAddDosen.disabled = dosenCount >= MAX_DOSEN;
@@ -378,20 +359,17 @@
             btnAddDosen.addEventListener('click', () => {
                 if (dosenCount >= MAX_DOSEN) return;
                 dosenCount++;
-                const row = document.createElement('div');
-                row.className = 'dosen-row';
+                const row = document.createElement('div'); row.className = 'dosen-row';
                 row.innerHTML = `
                     <div class="input-group">
                         <label>Usulan Dosen Pembimbing ${dosenCount}</label>
                         <input type="text" class="dosen-input" list="dosenDataList" placeholder="Ketik atau pilih">
                     </div>
-                    <button type="button" class="btn-icon remove">-</button>
-                `;
+                    <button type="button" class="btn-icon remove">-</button>`;
                 row.querySelector('.remove').addEventListener('click', () => { row.remove(); dosenCount--; updateDosenUI(); });
                 dosenContainer.appendChild(row);
                 updateDosenUI();
             });
-            // Tombol hapus untuk dosen pertama
             const row1 = document.getElementById('dosenRow1');
             const btnRemove1 = document.createElement('button');
             btnRemove1.type = 'button'; btnRemove1.className = 'btn-icon remove'; btnRemove1.textContent = '-';
@@ -402,56 +380,66 @@
             row1.appendChild(btnRemove1);
             updateDosenUI();
 
-            // === VALIDASI ===
+            // Validasi
             function validateNIM(nim) { return /^20\d{2}03\d{3}$/.test(nim.replace(/\D/g,'')); }
             function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
             function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
+            // Handler respons universal
+            function handleResponse(resp) {
+                hideLoading();
+                if (resp && resp.success) {
+                    toast('✅ Pengajuan berhasil dikirim!');
+                    form.reset();
+                    fileInfo.classList.remove('visible'); previewBtn.style.display = 'none'; fileB64 = null;
+                    document.querySelectorAll('.char-counter').forEach(c => c.textContent = '0/250');
+                } else {
+                    toast('❌ ' + (resp?.message || 'Gagal menyimpan.'), 'error');
+                }
+            }
+
+            // Listener pesan dari iframe (untuk mode standalone)
+            window.addEventListener('message', function(e) {
+                // Validasi origin (opsional)
+                if (e.origin !== new URL(GAS_DEPLOY_URL).origin) return;
+                if (e.data && typeof e.data === 'object') {
+                    handleResponse(e.data);
+                }
+            });
+
+            // Submit handler
             form.addEventListener('submit', e => {
                 e.preventDefault();
-                // Bersihkan error sebelumnya
                 document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
                 let valid = true;
                 const setErr = (id, msg) => {
                     const el = document.getElementById('error'+id);
-                    if (el) {
-                        el.textContent = msg;
-                        el.classList.add('visible');
-                    }
+                    if (el) { el.textContent = msg; el.classList.add('visible'); }
                     valid = false;
                 };
 
                 const nama = document.getElementById('namaLengkap').value.trim();
-                if (nama.length < 3) setErr('NamaLengkap', 'Nama lengkap minimal 3 karakter.');
+                if (nama.length < 3) setErr('NamaLengkap','Nama minimal 3 karakter.');
                 const nim = document.getElementById('nim').value.trim();
-                if (!validateNIM(nim)) setErr('Nim', 'Format NIM salah (contoh: 202203001).');
+                if (!validateNIM(nim)) setErr('Nim','Format NIM salah (contoh: 202203001).');
                 const hp = document.getElementById('noHp').value.trim();
-                if (!validateHP(hp)) setErr('NoHp', 'No HP tidak valid (08xx / 628xx).');
+                if (!validateHP(hp)) setErr('NoHp','No HP tidak valid (08xx/628xx).');
                 const email = document.getElementById('email').value.trim();
-                if (!validateEmail(email)) setErr('Email', 'Format email salah.');
-                if (!document.getElementById('judul').value.trim()) setErr('Judul', 'Judul wajib diisi.');
+                if (!validateEmail(email)) setErr('Email','Format email salah.');
+                if (!document.getElementById('judul').value.trim()) setErr('Judul','Judul wajib diisi.');
                 ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
                     if (!document.getElementById(id).value.trim()) setErr(id.charAt(0).toUpperCase()+id.slice(1), 'Wajib diisi.');
                 });
-                if (!fileB64) {
-                    errorFile.textContent = 'File proposal wajib diupload.';
-                    errorFile.classList.add('visible');
-                    valid = false;
-                }
+                if (!fileB64) { errorFile.textContent = 'File wajib diupload.'; errorFile.classList.add('visible'); valid = false; }
                 const dosenInputs = dosenContainer.querySelectorAll('.dosen-input');
                 const dosenList = Array.from(dosenInputs).map(inp => inp.value.trim()).filter(v=>v);
-                if (dosenList.length === 0) {
-                    setErr('Dosen1', 'Minimal satu dosen pembimbing.');
-                }
+                if (dosenList.length === 0) setErr('Dosen1','Minimal satu dosen pembimbing.');
 
                 if (!valid) return;
 
                 const semesterText = semesterBadge.textContent;
                 const formData = {
-                    namaLengkap: nama,
-                    nim: nim.replace(/\D/g,''),
-                    noHp: hp.replace(/[^0-9]/g,''),
-                    email,
+                    namaLengkap: nama, nim: nim.replace(/\D/g,''), noHp: hp.replace(/[^0-9]/g,''), email,
                     judul: document.getElementById('judul').value.trim(),
                     abstrak: document.getElementById('abstrak').value.trim(),
                     pendahuluan: document.getElementById('pendahuluan').value.trim(),
@@ -464,41 +452,38 @@
                 };
 
                 showLoading();
+
                 if (IS_GAS) {
                     google.script.run
                         .withSuccessHandler(handleResponse)
                         .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
-                    // ** KIRIM DENGAN Content-Type: text/plain UNTUK MENGHINDARI PREFLIGHT CORS **
-                    fetch(GAS_DEPLOY_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },  // <-- PENTING!
-                        body: JSON.stringify(formData)
-                    })
-                    .then(res => res.json())
-                    .then(handleResponse)
-                    .catch(err => {
-                        hideLoading();
-                        console.error('Fetch error:', err);
-                        toast('Gagal mengirim: ' + err.message, 'error');
-                    });
+                    // Kirim via form POST ke iframe tersembunyi
+                    const hiddenForm = document.createElement('form');
+                    hiddenForm.method = 'POST';
+                    hiddenForm.action = GAS_DEPLOY_URL;
+                    hiddenForm.target = 'hidden_iframe';
+                    hiddenForm.enctype = 'application/x-www-form-urlencoded';
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'data';
+                    input.value = JSON.stringify(formData);
+                    hiddenForm.appendChild(input);
+                    document.body.appendChild(hiddenForm);
+                    hiddenForm.submit();
+                    // Bersihkan setelah beberapa detik
+                    setTimeout(() => { if (document.body.contains(hiddenForm)) document.body.removeChild(hiddenForm); }, 3000);
+                    
+                    // Fallback timeout jika pesan tidak diterima dalam 15 detik
+                    setTimeout(() => {
+                        if (loading.classList.contains('active')) {
+                            hideLoading();
+                            toast('⏳ Tidak ada respons dari server. Silakan coba lagi.', 'error');
+                        }
+                    }, 15000);
                 }
             });
-
-            function handleResponse(resp) {
-                hideLoading();
-                if (resp && resp.success) {
-                    toast('✅ Pengajuan berhasil dikirim!');
-                    form.reset();
-                    fileInfo.classList.remove('visible');
-                    previewBtn.style.display = 'none';
-                    fileB64 = null;
-                    document.querySelectorAll('.char-counter').forEach(c => c.textContent = '0/250');
-                } else {
-                    toast('❌ ' + (resp?.message || 'Gagal menyimpan.'), 'error');
-                }
-            }
         })();
     </script>
 </body>
