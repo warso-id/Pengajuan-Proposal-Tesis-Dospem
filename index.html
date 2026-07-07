@@ -250,9 +250,14 @@
         </div>
     </div>
 
+    <!-- iframe tersembunyi hanya digunakan saat mode standalone -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
     <script>
     (() => {
         // Konfigurasi
+        const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbzrxfvpP6Y_QZXItrNkT6cJk6VN3BR2oVZw3ymwhOD2r-hs7YKjZB9sb6xOOedY7AlL/exec';
+        const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
         const MAX_DOSEN = 2;
         const MAX_CHAR = 250;
 
@@ -307,8 +312,12 @@
                 dosenDataList.appendChild(o);
             });
         };
-        // Langsung panggil server GAS
-        google.script.run.withSuccessHandler(populateDosenList).getDosenList();
+        if (IS_GAS) {
+            google.script.run.withSuccessHandler(populateDosenList).getDosenList();
+        } else {
+            // Fallback daftar contoh
+            populateDosenList(['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari']);
+        }
 
         // Char counters
         ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id=>{
@@ -420,7 +429,59 @@
             }
         };
 
-        // Submit handler
+        // Submit untuk mode GAS
+        const submitGAS = (payload) => {
+            google.script.run
+                .withSuccessHandler(handleResponse)
+                .withFailureHandler(err => {
+                    hideLoading();
+                    isSubmitting = false;
+                    btnSubmit.disabled = false;
+                    showToast('Error: ' + err.message, 'error');
+                })
+                .processForm(payload);
+        };
+
+        // Submit untuk mode standalone (via iframe + postMessage)
+        const submitStandalone = (payload) => {
+            // Buat form yang akan dikirim ke iframe
+            const hf = document.createElement('form');
+            hf.method = 'POST';
+            hf.action = GAS_DEPLOY_URL;
+            hf.target = 'hidden_iframe';
+            hf.enctype = 'application/x-www-form-urlencoded';
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'data';
+            inp.value = JSON.stringify(payload);
+            hf.appendChild(inp);
+            document.body.appendChild(hf);
+            hf.submit();
+            setTimeout(() => { if (document.body.contains(hf)) document.body.removeChild(hf); }, 3000);
+
+            // Fallback timeout: jika postMessage tak kunjung datang
+            setTimeout(() => {
+                if (isSubmitting) {
+                    hideLoading();
+                    isSubmitting = false;
+                    btnSubmit.disabled = false;
+                    showToast('⏳ Tidak ada respons. Silakan coba lagi.', 'error');
+                }
+            }, 10000);
+        };
+
+        // Listener untuk postMessage (hanya dari origin yang diizinkan)
+        window.addEventListener('message', (e) => {
+            // Pastikan origin dari script.google.com
+            if (e.origin !== 'https://script.google.com' && e.origin !== 'https://script.googleusercontent.com') return;
+            if (!isSubmitting) return;
+            const data = e.data;
+            if (data && typeof data === 'object' && data.type === 'formResponse' && data.payload) {
+                handleResponse(data.payload);
+            }
+        });
+
+        // Form submit event
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             if (isSubmitting) return;
@@ -487,16 +548,15 @@
             isSubmitting = true;
             btnSubmit.disabled = true;
             showLoading();
-            google.script.run
-                .withSuccessHandler(handleResponse)
-                .withFailureHandler(err => {
-                    hideLoading();
-                    isSubmitting = false;
-                    btnSubmit.disabled = false;
-                    showToast('Error: ' + err.message, 'error');
-                })
-                .processForm(payload);
+
+            if (IS_GAS) {
+                submitGAS(payload);
+            } else {
+                submitStandalone(payload);
+            }
         });
+
+        console.log('✅ Form siap. Mode:', IS_GAS ? 'GAS' : 'Standalone');
     })();
     </script>
 </body>
