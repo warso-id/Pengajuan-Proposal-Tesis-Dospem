@@ -6,6 +6,7 @@
     <title>Pengajuan Proposal Tesis MIK S2</title>
     <!-- Hindari error favicon 404 -->
     <link rel="icon" href="data:,">
+    <!-- Material Icons & Font -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -250,10 +251,12 @@
 
     <script>
         (() => {
-            // Ganti dengan URL deployment Apps Script Anda
+            // === KONFIGURASI ===
+            // Ganti dengan URL deployment Apps Script Anda yang terbaru
             const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
             const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
 
+            // === DOM ELEMENTS ===
             const form = document.getElementById('proposalForm');
             const loading = document.getElementById('loadingOverlay');
             const toastCont = document.getElementById('toastContainer');
@@ -271,7 +274,7 @@
             let fileB64 = null, fileMime = null, fileName = null;
             let fileObjURL = null;
 
-            // Toast
+            // === TOAST ===
             function toast(msg, type='success') {
                 const t = document.createElement('div');
                 t.className = `toast ${type}`;
@@ -283,7 +286,7 @@
             function showLoading() { loading.classList.add('active'); }
             function hideLoading() { loading.classList.remove('active'); }
 
-            // Semester
+            // === SEMESTER OTOMATIS ===
             (() => {
                 const now = new Date();
                 const m = now.getMonth()+1, y = now.getFullYear();
@@ -292,7 +295,7 @@
                 semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
             })();
 
-            // Load dosen list
+            // === LOAD DOSEN LIST ===
             if (IS_GAS) {
                 google.script.run.withSuccessHandler(arr => {
                     dosenDataList.innerHTML = '';
@@ -303,21 +306,20 @@
                     });
                 }).getDosenList();
             } else {
-                // Fallback contoh
                 ['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari'].forEach(n => {
                     const o = document.createElement('option'); o.value = n;
                     dosenDataList.appendChild(o);
                 });
             }
 
-            // Character counters
+            // === CHARACTER COUNTERS ===
             ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
                 const el = document.getElementById(id);
                 const counter = document.getElementById('counter' + id.charAt(0).toUpperCase()+id.slice(1));
                 el.addEventListener('input', () => counter.textContent = `${el.value.length}/250`);
             });
 
-            // File handling
+            // === FILE HANDLING ===
             fileProposal.addEventListener('change', function() {
                 const file = this.files[0];
                 errorFile.classList.remove('visible');
@@ -364,7 +366,7 @@
                 }
             });
 
-            // Dosen management
+            // === DOSEN MANAGEMENT ===
             function updateDosenUI() {
                 const rows = dosenContainer.querySelectorAll('.dosen-row');
                 rows.forEach((row, idx) => {
@@ -391,7 +393,7 @@
                 dosenContainer.appendChild(row);
                 updateDosenUI();
             });
-            // Tombol hapus dosen pertama
+            // Tombol hapus untuk dosen pertama
             const row1 = document.getElementById('dosenRow1');
             const btnRemove1 = document.createElement('button');
             btnRemove1.type = 'button'; btnRemove1.className = 'btn-icon remove'; btnRemove1.textContent = '-';
@@ -402,7 +404,7 @@
             row1.appendChild(btnRemove1);
             updateDosenUI();
 
-            // Validasi
+            // === VALIDASI ===
             function validateNIM(nim) { return /^20\d{2}03\d{3}$/.test(nim.replace(/\D/g,'')); }
             function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
             function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
@@ -413,8 +415,11 @@
                 document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
                 let valid = true;
                 const setErr = (id, msg) => {
-                    document.getElementById('error'+id).textContent = msg;
-                    document.getElementById('error'+id).classList.add('visible');
+                    const el = document.getElementById('error'+id);
+                    if (el) {
+                        el.textContent = msg;
+                        el.classList.add('visible');
+                    }
                     valid = false;
                 };
 
@@ -467,14 +472,20 @@
                         .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
+                    // Fetch dengan header CORS yang tepat
                     fetch(GAS_DEPLOY_URL, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
+                        mode: 'cors',         // Pastikan server mengizinkan
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
                     })
                     .then(res => res.json())
                     .then(handleResponse)
-                    .catch(err => { hideLoading(); toast('Gagal mengirim: '+err.message, 'error'); });
+                    .catch(err => {
+                        hideLoading();
+                        console.error('Fetch error:', err);
+                        toast('Gagal mengirim: ' + err.message + '. Pastikan URL deployment sudah benar dan server mengizinkan CORS.', 'error');
+                    });
                 }
             });
 
