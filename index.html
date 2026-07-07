@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,15 +22,6 @@
             --shadow: 0 14px 28px rgba(0,0,0,0.2);
             --radius: 12px;
             --transition: 0.25s;
-        }
-        [data-theme="dark"] {
-            --surface: #1e1e2f;
-            --surface-alt: #2a2a3d;
-            --text-primary: #e0e0e0;
-            --text-secondary: #b0b0b0;
-            --text-hint: #808080;
-            --border: #444;
-            --shadow: 0 14px 28px rgba(0,0,0,0.6);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -187,52 +178,52 @@
                 <div class="section-title"><span class="material-icons">person</span> A. Data Diri</div>
                 <div class="input-group">
                     <label for="namaLengkap">1. Nama Lengkap <span class="required-star">*</span></label>
-                    <input type="text" id="namaLengkap" placeholder="Masukkan nama lengkap" maxlength="150" required>
+                    <input type="text" id="namaLengkap" name="namaLengkap" placeholder="Masukkan nama lengkap" maxlength="150" autocomplete="name" required>
                     <span class="error-text" id="errorNamaLengkap"></span>
                 </div>
                 <div class="input-group">
                     <label for="nim">2. NIM <span class="required-star">*</span></label>
-                    <input type="text" id="nim" placeholder="Contoh: 202203001" maxlength="9" required>
+                    <input type="text" id="nim" name="nim" placeholder="Contoh: 202203001" maxlength="9" autocomplete="off" required>
                     <span class="error-text" id="errorNim"></span>
                 </div>
                 <div class="input-group">
                     <label for="noHp">3. No. HP <span class="required-star">*</span></label>
-                    <input type="tel" id="noHp" placeholder="08xxxxxxxxxx" required>
+                    <input type="tel" id="noHp" name="noHp" placeholder="08xxxxxxxxxx" autocomplete="tel-national" required>
                     <span class="error-text" id="errorNoHp"></span>
                 </div>
                 <div class="input-group">
                     <label for="email">4. Email <span class="required-star">*</span></label>
-                    <input type="email" id="email" placeholder="contoh@email.com" required>
+                    <input type="email" id="email" name="email" placeholder="contoh@email.com" autocomplete="email" required>
                     <span class="error-text" id="errorEmail"></span>
                 </div>
 
                 <div class="section-title"><span class="material-icons">description</span> B. Data Proposal</div>
                 <div class="input-group">
                     <label for="judul">1. Judul Proposal <span class="required-star">*</span></label>
-                    <input type="text" id="judul" placeholder="Masukkan judul" required>
+                    <input type="text" id="judul" name="judul" placeholder="Masukkan judul" autocomplete="off" required>
                     <span class="error-text" id="errorJudul"></span>
                 </div>
                 <div class="input-group">
                     <label for="abstrak">2. Abstrak (Max 250 karakter) <span class="required-star">*</span></label>
-                    <textarea id="abstrak" rows="3" maxlength="250" required></textarea>
+                    <textarea id="abstrak" name="abstrak" rows="3" maxlength="250" autocomplete="off" required></textarea>
                     <span class="char-counter" id="counterAbstrak">0/250</span>
                     <span class="error-text" id="errorAbstrak"></span>
                 </div>
                 <div class="input-group">
                     <label for="pendahuluan">3. Pendahuluan (Max 250 karakter) <span class="required-star">*</span></label>
-                    <textarea id="pendahuluan" rows="3" maxlength="250" required></textarea>
+                    <textarea id="pendahuluan" name="pendahuluan" rows="3" maxlength="250" autocomplete="off" required></textarea>
                     <span class="char-counter" id="counterPendahuluan">0/250</span>
                     <span class="error-text" id="errorPendahuluan"></span>
                 </div>
                 <div class="input-group">
                     <label for="landasanTeori">4. Landasan Teori (Max 250 karakter) <span class="required-star">*</span></label>
-                    <textarea id="landasanTeori" rows="3" maxlength="250" required></textarea>
+                    <textarea id="landasanTeori" name="landasanTeori" rows="3" maxlength="250" autocomplete="off" required></textarea>
                     <span class="char-counter" id="counterLandasanTeori">0/250</span>
                     <span class="error-text" id="errorLandasanTeori"></span>
                 </div>
                 <div class="input-group">
                     <label for="metodologi">5. Metodologi (Max 250 karakter) <span class="required-star">*</span></label>
-                    <textarea id="metodologi" rows="3" maxlength="250" required></textarea>
+                    <textarea id="metodologi" name="metodologi" rows="3" maxlength="250" autocomplete="off" required></textarea>
                     <span class="char-counter" id="counterMetodologi">0/250</span>
                     <span class="error-text" id="errorMetodologi"></span>
                 </div>
@@ -243,7 +234,7 @@
                     <div class="dosen-row" id="dosenRow1">
                         <div class="input-group">
                             <label for="dosen1">Usulan Dosen Pembimbing 1 <span class="required-star">*</span></label>
-                            <input type="text" class="dosen-input" id="dosen1" list="dosenDataList" placeholder="Ketik atau pilih" required>
+                            <input type="text" class="dosen-input" id="dosen1" name="dosen1" list="dosenDataList" placeholder="Ketik atau pilih" autocomplete="off" required>
                             <span class="error-text" id="errorDosen1"></span>
                         </div>
                         <button type="button" class="btn-icon remove-dosen" aria-label="Hapus dosen 1">-</button>
@@ -259,14 +250,9 @@
         </div>
     </div>
 
-    <!-- Iframe tersembunyi untuk POST cross‑origin -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-
     <script>
     (() => {
         // Konfigurasi
-        const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbzrxfvpP6Y_QZXItrNkT6cJk6VN3BR2oVZw3ymwhOD2r-hs7YKjZB9sb6xOOedY7AlL/exec';
-        const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
         const MAX_DOSEN = 2;
         const MAX_CHAR = 250;
 
@@ -321,8 +307,8 @@
                 dosenDataList.appendChild(o);
             });
         };
-        if (IS_GAS) google.script.run.withSuccessHandler(populateDosenList).getDosenList();
-        else populateDosenList(['Prof. Dr. Budi Santoso','Dr. Ani Widyastuti','Dr. Cahyo Nugroho','Prof. Dr. Dewi Lestari']);
+        // Langsung panggil server GAS
+        google.script.run.withSuccessHandler(populateDosenList).getDosenList();
 
         // Char counters
         ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id=>{
@@ -351,7 +337,7 @@
             row.innerHTML = `
                 <div class="input-group">
                     <label for="dosen${num}">Usulan Dosen Pembimbing ${num}</label>
-                    <input type="text" class="dosen-input" id="dosen${num}" list="dosenDataList" placeholder="Ketik atau pilih">
+                    <input type="text" class="dosen-input" id="dosen${num}" name="dosen${num}" list="dosenDataList" placeholder="Ketik atau pilih" autocomplete="off">
                     <span class="error-text" id="errorDosen${num}"></span>
                 </div>
                 <button type="button" class="btn-icon remove-dosen" aria-label="Hapus dosen ${num}">-</button>`;
@@ -420,7 +406,7 @@
             dosenCount=1; updateDosenUI();
         };
 
-        // Response handler (dari postMessage)
+        // Response handler
         const handleResponse = (resp) => {
             hideLoading();
             isSubmitting = false;
@@ -434,21 +420,11 @@
             }
         };
 
-        // Listener hanya untuk pesan yang valid dari iframe
-        window.addEventListener('message', (e) => {
-            if (e.origin !== 'https://script.google.com' && e.origin !== 'https://script.googleusercontent.com') return;
-            if (!isSubmitting) return;
-            const data = e.data;
-            // Abaikan jika bukan objek dengan struktur yang diharapkan
-            if (!data || typeof data !== 'object') return;
-            if (data.type === 'formResponse' && data.payload) {
-                handleResponse(data.payload);
-            }
-        });
-
-        // Submit via iframe
-        const submitForm = () => {
+        // Submit handler
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
             if (isSubmitting) return;
+
             clearAllErrors();
             let valid = true, firstErr = null;
 
@@ -511,51 +487,16 @@
             isSubmitting = true;
             btnSubmit.disabled = true;
             showLoading();
-
-            if (IS_GAS) {
-                google.script.run
-                    .withSuccessHandler(handleResponse)
-                    .withFailureHandler(err => {
-                        hideLoading();
-                        isSubmitting = false;
-                        btnSubmit.disabled = false;
-                        showToast('Error: ' + err.message, 'error');
-                    })
-                    .processForm(payload);
-            } else {
-                // Buat form dan kirim ke iframe
-                const hf = document.createElement('form');
-                hf.method = 'POST';
-                hf.action = GAS_DEPLOY_URL;
-                hf.target = 'hidden_iframe';
-                hf.enctype = 'application/x-www-form-urlencoded';
-                const inp = document.createElement('input');
-                inp.type = 'hidden';
-                inp.name = 'data';
-                inp.value = JSON.stringify(payload);
-                hf.appendChild(inp);
-                document.body.appendChild(hf);
-                hf.submit();
-                setTimeout(() => { if (document.body.contains(hf)) document.body.removeChild(hf); }, 3000);
-
-                // Timeout fallback (seharusnya postMessage sudah datang sebelumnya)
-                setTimeout(() => {
-                    if (isSubmitting) {
-                        hideLoading();
-                        isSubmitting = false;
-                        btnSubmit.disabled = false;
-                        showToast('⏳ Tidak ada respons. Silakan coba lagi.', 'error');
-                    }
-                }, 8000);
-            }
-        };
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            submitForm();
+            google.script.run
+                .withSuccessHandler(handleResponse)
+                .withFailureHandler(err => {
+                    hideLoading();
+                    isSubmitting = false;
+                    btnSubmit.disabled = false;
+                    showToast('Error: ' + err.message, 'error');
+                })
+                .processForm(payload);
         });
-
-        console.log('✅ Form siap. Mode:', IS_GAS ? 'GAS' : 'Standalone');
     })();
     </script>
 </body>
