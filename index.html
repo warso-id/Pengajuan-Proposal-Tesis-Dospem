@@ -263,6 +263,7 @@
             const MAX_DOSEN = 2;
             let fileB64 = null, fileMime = null, fileName = null;
             let fileObjURL = null;
+            let submitTimeout = null; // Untuk menghentikan timeout jika respons sudah diterima
 
             // Toast
             function toast(msg, type='success') {
@@ -385,8 +386,17 @@
             function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
             function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
-            // Handler respons universal
+            // Fungsi untuk menghentikan timeout
+            function clearSubmitTimeout() {
+                if (submitTimeout) {
+                    clearTimeout(submitTimeout);
+                    submitTimeout = null;
+                }
+            }
+
+            // Handler respons universal (dipanggil dari postMessage atau GAS callback)
             function handleResponse(resp) {
+                clearSubmitTimeout(); // hentikan timeout
                 hideLoading();
                 if (resp && resp.success) {
                     toast('✅ Pengajuan berhasil dikirim!');
@@ -400,9 +410,9 @@
 
             // Listener pesan dari iframe (untuk mode standalone)
             window.addEventListener('message', function(e) {
-                // Validasi origin (opsional)
+                // Pastikan pesan berasal dari origin yang sama dengan URL Apps Script
                 if (e.origin !== new URL(GAS_DEPLOY_URL).origin) return;
-                if (e.data && typeof e.data === 'object') {
+                if (e.data && typeof e.data === 'object' && e.data.success !== undefined) {
                     handleResponse(e.data);
                 }
             });
@@ -459,7 +469,7 @@
                         .withFailureHandler(err => { hideLoading(); toast('Error: '+err.message, 'error'); })
                         .processForm(formData);
                 } else {
-                    // Kirim via form POST ke iframe tersembunyi
+                    // Kirim via form POST ke iframe
                     const hiddenForm = document.createElement('form');
                     hiddenForm.method = 'POST';
                     hiddenForm.action = GAS_DEPLOY_URL;
@@ -472,16 +482,16 @@
                     hiddenForm.appendChild(input);
                     document.body.appendChild(hiddenForm);
                     hiddenForm.submit();
-                    // Bersihkan setelah beberapa detik
                     setTimeout(() => { if (document.body.contains(hiddenForm)) document.body.removeChild(hiddenForm); }, 3000);
-                    
-                    // Fallback timeout jika pesan tidak diterima dalam 15 detik
-                    setTimeout(() => {
+
+                    // Fallback timeout: jika dalam 20 detik tidak ada respons, tampilkan pesan
+                    clearSubmitTimeout();
+                    submitTimeout = setTimeout(() => {
                         if (loading.classList.contains('active')) {
                             hideLoading();
-                            toast('⏳ Tidak ada respons dari server. Silakan coba lagi.', 'error');
+                            toast('⏳ Tidak ada respons dari server. Periksa koneksi dan coba lagi.', 'error');
                         }
-                    }, 15000);
+                    }, 20000);
                 }
             });
         })();
