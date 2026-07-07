@@ -265,7 +265,7 @@
     (() => {
         /* ========== CONFIG ========== */
         const CONFIG = {
-            GAS_DEPLOY_URL: 'https://script.google.com/macros/s/AKfycbzrxfvpP6Y_QZXItrNkT6cJk6VN3BR2oVZw3ymwhOD2r-hs7YKjZB9sb6xOOedY7AlL/exec',
+            GAS_DEPLOY_URL: 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec',
             MAX_DOSEN: 2,
             MAX_CHAR: 250,
             SUBMIT_TIMEOUT: 15000,
@@ -277,6 +277,7 @@
         /* ========== STATE ========== */
         let dosenCount = 1;
         let isSubmitting = false;
+        let activeTimeout = null; // untuk menyimpan timeout ID
 
         /* ========== DOM HELPERS ========== */
         const $ = (sel) => document.querySelector(sel);
@@ -432,78 +433,129 @@
             dosenCount=1; updateDosenUI();
         };
 
-        /* ========== SUBMISSION ========== */
+        /* ========== RESPONSE HANDLER ========== */
         const handleResponse = (resp) => {
-            hideLoading(); isSubmitting=false; btnSubmit.disabled=false;
+            // Hentikan timeout jika masih aktif
+            if (activeTimeout) {
+                clearTimeout(activeTimeout);
+                activeTimeout = null;
+            }
+            hideLoading();
+            isSubmitting = false;
+            btnSubmit.disabled = false;
+
             if(resp?.success){
                 showToast('✅ Pengajuan berhasil dikirim!');
-                resetForm(); showSuccessModal();
+                resetForm();
+                showSuccessModal();
             } else {
                 showToast('❌ '+(resp?.message||'Gagal menyimpan.'), 'error');
             }
         };
 
-        window.addEventListener('message', (e)=>{
-            if(e.origin!=='https://script.google.com' && e.origin!=='https://script.googleusercontent.com') return;
-            if(e.data?.type==='formResponse') handleResponse(e.data.payload);
+        /* ========== IFRAME MESSAGE LISTENER ========== */
+        window.addEventListener('message', (e) => {
+            // Hanya terima dari origin script.google.com
+            if (e.origin !== 'https://script.google.com' && e.origin !== 'https://script.googleusercontent.com') return;
+            if (isSubmitting && e.data) {
+                try {
+                    // Data bisa berupa string (JSON) atau objek
+                    const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+                    if (data && typeof data === 'object' && ('success' in data)) {
+                        handleResponse(data);
+                    }
+                } catch (err) {
+                    console.warn('Pesan tidak valid dari iframe:', e.data);
+                }
+            }
         });
 
-        const submitData = (formData, attempt=0) => {
-            if(IS_GAS){
+        /* ========== SUBMIT LOGIC ========== */
+        const submitData = (formData, attempt = 0) => {
+            if (IS_GAS) {
                 google.script.run
                     .withSuccessHandler(handleResponse)
-                    .withFailureHandler(err=>{
+                    .withFailureHandler(err => {
                         console.error('GAS error:', err);
-                        if(attempt < CONFIG.RETRY_ATTEMPTS) setTimeout(()=>submitData(formData, attempt+1), CONFIG.RETRY_DELAY);
-                        else { hideLoading(); isSubmitting=false; btnSubmit.disabled=false; showToast('❌ Gagal mengirim.', 'error'); }
+                        if (attempt < CONFIG.RETRY_ATTEMPTS) {
+                            setTimeout(() => submitData(formData, attempt + 1), CONFIG.RETRY_DELAY);
+                        } else {
+                            hideLoading();
+                            isSubmitting = false;
+                            btnSubmit.disabled = false;
+                            showToast('❌ Gagal mengirim setelah beberapa percobaan.', 'error');
+                        }
                     })
                     .processForm(formData);
             } else {
+                // Mode standalone: kirim via form ke iframe
                 const hf = document.createElement('form');
-                hf.method='POST'; hf.action=CONFIG.GAS_DEPLOY_URL; hf.target='hidden_iframe';
-                hf.enctype='application/x-www-form-urlencoded';
-                const inp = document.createElement('input'); inp.type='hidden'; inp.name='data';
-                inp.value=JSON.stringify(formData); hf.appendChild(inp);
-                document.body.appendChild(hf); hf.submit();
-                setTimeout(()=>{ if(document.body.contains(hf)) document.body.removeChild(hf); }, 3000);
+                hf.method = 'POST';
+                hf.action = CONFIG.GAS_DEPLOY_URL;
+                hf.target = 'hidden_iframe';
+                hf.enctype = 'application/x-www-form-urlencoded';
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'data';
+                inp.value = JSON.stringify(formData);
+                hf.appendChild(inp);
+                document.body.appendChild(hf);
+                hf.submit();
+                setTimeout(() => {
+                    if (document.body.contains(hf)) document.body.removeChild(hf);
+                }, 3000);
 
-                const tid = setTimeout(()=>{
-                    if(!isSubmitting) return;
-                    if(attempt < CONFIG.RETRY_ATTEMPTS) submitData(formData, attempt+1);
-                    else { hideLoading(); isSubmitting=false; btnSubmit.disabled=false; showToast('⏳ Tidak ada respons.', 'error'); }
+                // Set timeout untuk fallback jika tidak ada respons
+                activeTimeout = setTimeout(() => {
+                    if (!isSubmitting) return; // sudah di-handle
+                    if (attempt < CONFIG.RETRY_ATTEMPTS) {
+                        console.log(`Tidak ada respons, mencoba ulang (${attempt+1}/${CONFIG.RETRY_ATTEMPTS})`);
+                        submitData(formData, attempt + 1);
+                    } else {
+                        hideLoading();
+                        isSubmitting = false;
+                        btnSubmit.disabled = false;
+                        showToast('⏳ Tidak ada respons dari server setelah beberapa percobaan.', 'error');
+                    }
                 }, CONFIG.SUBMIT_TIMEOUT);
-
-                const orig = handleResponse;
-                handleResponse = (resp) => { clearTimeout(tid); orig(resp); };
             }
         };
 
-        form.addEventListener('submit', (e)=>{
+        /* ========== FORM SUBMIT EVENT ========== */
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-            if(isSubmitting) return;
+            if (isSubmitting) return; // cegah double submit
+
             clearAllErrors();
             let valid = true, firstErr = null;
 
-            Object.entries(validators).forEach(([id, fn])=>{
+            Object.entries(validators).forEach(([id, fn]) => {
                 const el = document.getElementById(id);
-                if(!el) return;
+                if (!el) return;
                 const msg = fn(sanitizeInput(el.value));
-                if(msg) { showFieldError(id, msg); valid=false; if(!firstErr) firstErr=el; }
+                if (msg) {
+                    showFieldError(id, msg);
+                    valid = false;
+                    if (!firstErr) firstErr = el;
+                }
             });
 
+            // Validasi dosen
             const dosenInputs = Array.from(dosenContainer.querySelectorAll('.dosen-input'));
-            const dosenList = dosenInputs.map(i=>sanitizeInput(i.value.trim())).filter(v=>v);
-            if(!dosenList.length){
-                showFieldError('dosen1','Minimal satu dosen.'); valid=false;
-                if(!firstErr) firstErr = document.getElementById('dosen1');
+            const dosenList = dosenInputs.map(i => sanitizeInput(i.value.trim())).filter(v => v);
+            if (!dosenList.length) {
+                showFieldError('dosen1', 'Minimal satu dosen.');
+                valid = false;
+                if (!firstErr) firstErr = document.getElementById('dosen1');
             } else {
-                const low = dosenList.map(v=>v.toLowerCase());
-                if(new Set(low).size < low.length){
+                const low = dosenList.map(v => v.toLowerCase());
+                if (new Set(low).size < low.length) {
                     const seen = new Set();
-                    for(let i=0;i<low.length;i++){
-                        if(seen.has(low[i])){
+                    for (let i = 0; i < low.length; i++) {
+                        if (seen.has(low[i])) {
                             showFieldError(`dosen${i+1}`, 'Dosen duplikat.');
-                            valid=false; if(!firstErr) firstErr=document.getElementById(`dosen${i+1}`);
+                            valid = false;
+                            if (!firstErr) firstErr = document.getElementById(`dosen${i+1}`);
                             break;
                         }
                         seen.add(low[i]);
@@ -511,12 +563,18 @@
                 }
             }
 
-            if(!valid){ if(firstErr){ firstErr.focus(); firstErr.scrollIntoView({behavior:'smooth',block:'center'}); } return; }
+            if (!valid) {
+                if (firstErr) {
+                    firstErr.focus();
+                    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
 
             const payload = {
                 namaLengkap: sanitizeInput(document.getElementById('namaLengkap').value.trim()),
-                nim: document.getElementById('nim').value.replace(/\D/g,''),
-                noHp: document.getElementById('noHp').value.replace(/[^0-9]/g,''),
+                nim: document.getElementById('nim').value.replace(/\D/g, ''),
+                noHp: document.getElementById('noHp').value.replace(/[^0-9]/g, ''),
                 email: sanitizeInput(document.getElementById('email').value.trim()),
                 judul: sanitizeInput(document.getElementById('judul').value.trim()),
                 abstrak: sanitizeInput(document.getElementById('abstrak').value.trim()),
@@ -524,15 +582,17 @@
                 landasanTeori: sanitizeInput(document.getElementById('landasanTeori').value.trim()),
                 metodologi: sanitizeInput(document.getElementById('metodologi').value.trim()),
                 dosenPembimbing: dosenList,
-                semester: semesterBadge.textContent.includes('Ganjil')?'Ganjil':'Genap',
+                semester: semesterBadge.textContent.includes('Ganjil') ? 'Ganjil' : 'Genap',
                 tahunAjaran: semesterBadge.textContent.match(/\d{4}\/\d{4}/)[0]
             };
 
-            isSubmitting=true; btnSubmit.disabled=true; showLoading();
+            isSubmitting = true;
+            btnSubmit.disabled = true;
+            showLoading();
             submitData(payload, 0);
         });
 
-        console.log('✅ Form siap. Mode:', IS_GAS?'GAS':'Standalone');
+        console.log('✅ Form siap. Mode:', IS_GAS ? 'GAS' : 'Standalone');
     })();
     </script>
 </body>
