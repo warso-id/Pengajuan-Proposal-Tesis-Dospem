@@ -4,247 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan Proposal Tesis dan Dosen Pembimbing MIK S2</title>
-    <!-- Material Icons & Font -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #1a237e;
             --primary-light: #534bae;
-            --primary-dark: #000051;
             --accent: #ff6f00;
-            --accent-light: #ffa040;
             --surface: #ffffff;
             --surface-alt: #f5f5f5;
             --error: #d32f2f;
-            --error-light: #ffebee;
             --success: #2e7d32;
             --text-primary: #212121;
             --text-secondary: #616161;
             --text-hint: #9e9e9e;
             --border: #e0e0e0;
-            --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-            --shadow-2: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.10);
-            --shadow-3: 0 10px 20px rgba(0,0,0,0.18), 0 6px 6px rgba(0,0,0,0.12);
-            --shadow-4: 0 14px 28px rgba(0,0,0,0.22), 0 10px 10px rgba(0,0,0,0.16);
             --radius-sm: 8px;
             --radius: 12px;
             --radius-lg: 16px;
             --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            --font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: var(--font-family);
-            background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 30%, #e3f2fd 70%, #e8eaf6 100%);
-            background-attachment: fixed;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e8eaf6, #c5cae9, #e3f2fd);
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center;
             padding: 16px; color: var(--text-primary);
-            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
         }
-
-        /* Loading Overlay */
+        /* Loading overlay */
         .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            position: fixed; top:0;left:0;width:100%;height:100%;
+            background: rgba(0,0,0,0.6); z-index:9999;
+            display:flex; align-items:center; justify-content:center;
+            opacity:0; pointer-events:none; transition:0.3s;
         }
-        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        .loading-overlay.active { opacity:1; pointer-events:all; }
         .loading-spinner {
-            width: 64px; height: 64px; border-radius: 50%;
-            background: conic-gradient(from 0deg, transparent 0%, #ffffff 40%, #ffab40 70%, transparent 100%);
-            animation: spin 0.8s linear infinite; position: relative;
-        }
-        .loading-spinner::after {
-            content: ''; position: absolute; top: 6px; left: 6px;
-            width: 52px; height: 52px; border-radius: 50%; background: rgba(26,35,126,0.9);
-        }
-        .loading-text {
-            color: #ffffff; margin-top: 20px; font-size: 15px; font-weight: 500;
-            letter-spacing: 0.5px; animation: pulse-text 1.4s ease-in-out infinite;
+            width:64px; height:64px; border-radius:50%;
+            background: conic-gradient(transparent 0%, #fff 40%, #ffab40 70%, transparent 100%);
+            animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse-text { 0%,100%{opacity:0.7;} 50%{opacity:1;} }
+        .loading-text { color:#fff; margin-top:20px; font-weight:500; }
 
         /* Toast */
-        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast-container { position:fixed; top:24px; right:24px; z-index:10000; display:flex; flex-direction:column; gap:10px; }
         .toast {
-            padding: 14px 20px; border-radius: var(--radius-sm); color: #fff; font-weight: 500;
-            font-size: 14px; box-shadow: var(--shadow-3); transform: translateX(120%);
-            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); pointer-events: auto;
-            max-width: 380px; display: flex; align-items: center; gap: 10px;
+            padding:14px 20px; border-radius:8px; color:#fff; font-weight:500;
+            font-size:14px; box-shadow:0 10px 20px rgba(0,0,0,0.2);
+            transform:translateX(120%); transition:0.35s;
+            max-width:380px; display:flex; align-items:center; gap:10px;
         }
-        .toast.show { transform: translateX(0); }
-        .toast.success { background: #2e7d32; }
-        .toast.error { background: #c62828; }
-        .toast .material-icons { font-size: 20px; flex-shrink: 0; }
+        .toast.show { transform:translateX(0); }
+        .toast.success { background:#2e7d32; }
+        .toast.error { background:#c62828; }
 
-        /* Main Card */
         .main-card {
-            width: 100%; max-width: 720px; background: var(--surface);
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-4);
-            overflow: hidden; position: relative; margin-bottom: 24px;
+            width:100%; max-width:720px; background:var(--surface);
+            border-radius:16px; box-shadow:0 14px 28px rgba(0,0,0,0.2);
+            overflow:hidden;
         }
-
         .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            padding: 20px 24px; text-align: center; position: relative; overflow: hidden;
-        }
-        .header::before {
-            content: ''; position: absolute; top: -50%; left: -30%; width: 160%; height: 160%;
-            background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 60%);
-            pointer-events: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            padding:20px 24px; text-align:center; position:relative; overflow:hidden;
         }
         .header-logo {
-            width: 70px; height: 70px; border-radius: 50%; object-fit: cover;
-            border: 3px solid rgba(255,255,255,0.9); box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-            margin-bottom: 10px; position: relative; z-index: 1; background: #fff; padding: 4px;
+            width:70px; height:70px; border-radius:50%; object-fit:cover;
+            border:3px solid rgba(255,255,255,0.9); margin-bottom:10px; background:#fff; padding:4px;
         }
-        .header h1 {
-            color: #ffffff; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.3px;
-            margin: 0; position: relative; z-index: 1; line-height: 1.3;
-        }
-        .header .subtitle {
-            color: rgba(255,255,255,0.85); font-size: 0.85rem; font-weight: 400;
-            margin-top: 4px; position: relative; z-index: 1; letter-spacing: 0.4px;
-        }
+        .header h1 { color:#fff; font-size:1.35rem; margin:0; }
+        .subtitle { color:rgba(255,255,255,0.85); font-size:0.85rem; margin-top:4px; }
         .semester-badge {
-            display: inline-block; background: var(--accent); color: #fff; padding: 6px 14px;
-            border-radius: 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
-            margin-top: 8px; position: relative; z-index: 1; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            display:inline-block; background:var(--accent); color:#fff; padding:6px 14px;
+            border-radius:20px; font-size:0.78rem; font-weight:600; margin-top:8px;
         }
-
-        .form-body { padding: 24px 20px 28px; }
+        .form-body { padding:24px 20px 28px; }
         .section-title {
-            font-size: 1.05rem; font-weight: 600; color: var(--primary); margin: 20px 0 14px;
-            padding-bottom: 8px; border-bottom: 2px solid var(--primary);
-            display: flex; align-items: center; gap: 8px; letter-spacing: 0.3px;
+            font-size:1.05rem; font-weight:600; color:var(--primary); margin:20px 0 14px;
+            padding-bottom:8px; border-bottom:2px solid var(--primary); display:flex; align-items:center; gap:8px;
         }
-        .section-title:first-child { margin-top: 0; }
-        .section-title .material-icons { font-size: 22px; color: var(--accent); }
-
-        .input-group { margin-bottom: 18px; position: relative; }
-        .input-group label {
-            display: block; font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
-            margin-bottom: 5px; letter-spacing: 0.3px; transition: color var(--transition);
-        }
-        .input-group label .required-star { color: var(--error); margin-left: 2px; }
+        .input-group { margin-bottom:18px; }
+        .input-group label { font-size:0.82rem; font-weight:500; color:var(--text-secondary); margin-bottom:5px; display:block; }
+        .required-star { color:var(--error); margin-left:2px; }
         .input-group input, .input-group textarea {
-            width: 100%; padding: 12px 14px; border: 2px solid var(--border);
-            border-radius: var(--radius-sm); font-size: 0.95rem; font-family: var(--font-family);
-            color: var(--text-primary); background: var(--surface-alt); transition: all var(--transition);
-            resize: vertical; outline: none; letter-spacing: 0.2px;
+            width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:8px;
+            font-size:0.95rem; background:var(--surface-alt); transition:0.25s; outline:none;
         }
-        .input-group input:focus, .input-group textarea:focus {
-            border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(26,35,126,0.08);
-        }
-        .input-group input.error, .input-group textarea.error {
-            border-color: var(--error); background: var(--error-light); box-shadow: 0 0 0 3px rgba(211,47,47,0.06);
-        }
-        .input-group input.success, .input-group textarea.success {
-            border-color: var(--success); background: #f1f8e9;
-        }
-        .input-group .helper-text { font-size: 0.72rem; color: var(--text-hint); margin-top: 4px; letter-spacing: 0.2px; }
-        .input-group .error-text { font-size: 0.72rem; color: var(--error); margin-top: 4px; display: none; letter-spacing: 0.2px; font-weight: 500; }
-        .input-group .error-text.visible { display: block; }
-        .char-counter {
-            font-size: 0.72rem; color: var(--text-hint); text-align: right; margin-top: 3px;
-            font-weight: 500; transition: color var(--transition);
-        }
-        .char-counter.warning { color: #e65100; }
-        .char-counter.danger { color: var(--error); font-weight: 700; }
+        .input-group input:focus, .input-group textarea:focus { border-color:var(--primary); background:#fff; }
+        .error-text { font-size:0.72rem; color:var(--error); margin-top:4px; display:none; }
+        .error-text.visible { display:block; }
+        .char-counter { font-size:0.72rem; color:var(--text-hint); text-align:right; margin-top:3px; }
 
-        /* File Upload */
-        .file-upload-wrapper { position: relative; }
         .file-upload-area {
-            border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 20px;
-            text-align: center; cursor: pointer; transition: all var(--transition);
-            background: var(--surface-alt); position: relative;
+            border:2px dashed var(--border); border-radius:8px; padding:20px; text-align:center;
+            background:var(--surface-alt); cursor:pointer; transition:0.25s;
         }
-        .file-upload-area:hover { border-color: var(--primary-light); background: #e8eaf6; }
-        .file-upload-area .material-icons { font-size: 40px; color: var(--text-hint); transition: color var(--transition); }
-        .file-upload-area:hover .material-icons { color: var(--primary); }
-        .file-upload-area .upload-text { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
-        .file-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-
+        .file-upload-area:hover { border-color:var(--primary-light); background:#e8eaf6; }
         .file-info {
-            display: none; align-items: center; gap: 10px; margin-top: 8px;
-            padding: 12px 14px; background: #e8f5e9; border-radius: var(--radius-sm);
-            font-size: 0.82rem; color: #1b5e20; font-weight: 500; flex-wrap: wrap;
+            display:none; align-items:center; gap:10px; margin-top:8px; padding:12px;
+            background:#e8f5e9; border-radius:8px; font-size:0.82rem; color:#1b5e20;
         }
-        .file-info.visible { display: flex; }
-        .file-info .material-icons { font-size: 20px; color: #2e7d32; }
-        .file-details { flex: 1; min-width: 0; word-break: break-word; }
+        .file-info.visible { display:flex; }
         .file-preview-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: var(--primary); color: #fff; border: none; padding: 8px 16px;
-            border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer;
-            transition: all var(--transition); white-space: nowrap;
-            box-shadow: var(--shadow-1); text-decoration: none;
+            background:var(--primary); color:#fff; padding:8px 16px; border-radius:20px;
+            text-decoration:none; font-size:0.78rem; display:none; align-items:center; gap:6px;
         }
-        .file-preview-btn:hover { background: var(--primary-light); box-shadow: var(--shadow-2); }
-        .file-preview-btn .material-icons { font-size: 18px; color: #fff; }
-
-        /* Dosen */
-        .dosen-container { display: flex; flex-direction: column; gap: 12px; }
-        .dosen-row { display: flex; align-items: center; gap: 10px; animation: fadeIn 0.3s ease; }
-        .dosen-row .input-group { flex: 1; margin-bottom: 0; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .dosen-container { display:flex; flex-direction:column; gap:12px; }
+        .dosen-row { display:flex; align-items:center; gap:10px; }
+        .dosen-row .input-group { flex:1; margin-bottom:0; }
         .btn-icon {
-            width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: all var(--transition);
-            flex-shrink: 0; font-size: 20px;
+            width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; background:#ffebee; color:#c62828;
         }
-        .btn-icon.remove { background: #ffebee; color: #c62828; }
-        .btn-icon.remove:hover { background: #ffcdd2; transform: scale(1.1); }
         .btn-add-dosen {
-            display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
-            background: transparent; border: 2px dashed var(--primary-light); border-radius: 20px;
-            color: var(--primary); cursor: pointer; font-weight: 500; font-size: 0.85rem;
-            transition: all var(--transition); letter-spacing: 0.3px; font-family: var(--font-family);
+            display:inline-flex; align-items:center; gap:6px; padding:10px 18px;
+            border:2px dashed var(--primary-light); border-radius:20px; color:var(--primary);
+            background:transparent; cursor:pointer; font-weight:500; margin-top:8px;
         }
-        .btn-add-dosen:hover { background: #e8eaf6; border-color: var(--primary); border-style: solid; }
-        .btn-add-dosen:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-        .btn-add-dosen .material-icons { font-size: 18px; }
-
-        /* Submit */
-        .submit-section { text-align: center; margin-top: 28px; padding-top: 8px; }
         .btn-submit {
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 14px 40px; background: var(--accent); color: #fff; border: none;
-            border-radius: 28px; font-size: 1rem; font-weight: 600; cursor: pointer;
-            letter-spacing: 0.5px; font-family: var(--font-family); box-shadow: var(--shadow-2);
-            transition: all var(--transition); position: relative; overflow: hidden; min-width: 180px;
+            display:inline-flex; align-items:center; gap:10px; padding:14px 40px;
+            background:var(--accent); color:#fff; border:none; border-radius:28px;
+            font-size:1rem; font-weight:600; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.2);
         }
-        .btn-submit:hover { background: var(--accent-light); box-shadow: var(--shadow-3); transform: translateY(-2px); }
-        .btn-submit:active { transform: translateY(0); box-shadow: var(--shadow-1); }
-        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
-        .btn-submit .ripple {
-            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.5);
-            transform: scale(0); animation: ripple-anim 0.6s ease-out forwards; pointer-events: none;
-        }
-        @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+        .btn-submit:hover { background:#ffa040; }
+        .footer-note { text-align:center; font-size:0.72rem; color:var(--text-hint); padding:8px; }
 
-        .footer-note { text-align: center; font-size: 0.72rem; color: var(--text-hint); padding: 0 16px 8px; letter-spacing: 0.2px; }
-
-        @media (max-width: 600px) {
-            body { padding: 8px; }
-            .main-card { border-radius: var(--radius); }
-            .header { padding: 16px 14px; }
-            .header h1 { font-size: 1.15rem; }
-            .header-logo { width: 55px; height: 55px; }
-            .form-body { padding: 16px 12px 22px; }
-            .section-title { font-size: 0.95rem; }
-            .input-group input, .input-group textarea { padding: 10px 12px; font-size: 0.88rem; }
-            .btn-submit { width: 100%; padding: 14px 20px; font-size: 0.95rem; border-radius: 24px; }
-            .dosen-row { flex-wrap: wrap; }
-            .btn-icon { width: 34px; height: 34px; font-size: 18px; }
-            .toast-container { top: 10px; right: 10px; left: 10px; }
-            .toast { max-width: 100%; font-size: 13px; }
-            .file-info { flex-direction: column; align-items: flex-start; }
+        @media (max-width:600px) {
+            .header h1 { font-size:1.15rem; }
+            .btn-submit { width:100%; padding:14px 20px; }
         }
     </style>
 </head>
@@ -262,621 +149,331 @@
             <p class="subtitle">dan Dosen Pembimbing MIK S2</p>
             <span class="semester-badge" id="semesterBadge">📅 Memuat semester...</span>
         </div>
-
         <div class="form-body">
             <form id="proposalForm" novalidate>
-                <!-- A. DATA DIRI -->
                 <div class="section-title"><span class="material-icons">person</span> A. Data Diri</div>
                 <div class="input-group">
                     <label for="namaLengkap">1. Nama Lengkap <span class="required-star">*</span></label>
-                    <input type="text" id="namaLengkap" name="namaLengkap" placeholder="Masukkan nama lengkap Anda" maxlength="150" required>
-                    <span class="error-text" id="errorNamaLengkap">Nama lengkap wajib diisi (minimal 3 karakter).</span>
+                    <input type="text" id="namaLengkap" placeholder="Masukkan nama lengkap" maxlength="150" required>
+                    <span class="error-text" id="errorNamaLengkap">Nama lengkap wajib diisi (min 3 karakter).</span>
                 </div>
                 <div class="input-group">
                     <label for="nim">2. NIM <span class="required-star">*</span></label>
-                    <input type="text" id="nim" name="nim" placeholder="Contoh: 202203001" maxlength="9" required>
-                    <span class="helper-text">Format: 9 digit (tahun + kode prodi 03 + nomor urut). Contoh: 202203001</span>
-                    <span class="error-text" id="errorNim">NIM harus 9 digit dengan format: tahun (4 digit), kode prodi 03, nomor urut (3 digit).</span>
+                    <input type="text" id="nim" placeholder="Contoh: 202203001" maxlength="9" required>
+                    <span class="error-text" id="errorNim">NIM harus 9 digit (tahun+kode prodi 03+nomor urut).</span>
                 </div>
                 <div class="input-group">
-                    <label for="noHp">3. No. Handphone <span class="required-star">*</span></label>
-                    <input type="tel" id="noHp" name="noHp" placeholder="08xx xxxx xxxx atau 628xx xxxx xxxx" maxlength="15" required>
-                    <span class="helper-text">Hanya angka, diawali 08 atau 628. Panjang 10-13 digit.</span>
-                    <span class="error-text" id="errorNoHp">Nomor HP tidak valid. Gunakan format Indonesia (08xx atau 628xx).</span>
+                    <label for="noHp">3. No. HP <span class="required-star">*</span></label>
+                    <input type="tel" id="noHp" placeholder="08xx..." required>
+                    <span class="error-text" id="errorNoHp">Gunakan format 08xx atau 628xx (10-13 digit).</span>
                 </div>
                 <div class="input-group">
                     <label for="email">4. Email <span class="required-star">*</span></label>
-                    <input type="email" id="email" name="email" placeholder="contoh@email.com" maxlength="100" required>
+                    <input type="email" id="email" placeholder="contoh@email.com" required>
                     <span class="error-text" id="errorEmail">Format email tidak valid.</span>
                 </div>
 
-                <!-- B. DATA PROPOSAL -->
                 <div class="section-title"><span class="material-icons">description</span> B. Data Proposal</div>
                 <div class="input-group">
                     <label for="judul">1. Judul Proposal <span class="required-star">*</span></label>
-                    <input type="text" id="judul" name="judul" placeholder="Masukkan judul proposal tesis" maxlength="300" required>
-                    <span class="error-text" id="errorJudul">Judul proposal wajib diisi.</span>
+                    <input type="text" id="judul" placeholder="Masukkan judul proposal" required>
+                    <span class="error-text" id="errorJudul">Judul wajib diisi.</span>
                 </div>
                 <div class="input-group">
-                    <label for="abstrak">2. Abstrak Bahasa Indonesia (Max: 250 Karakter) <span class="required-star">*</span></label>
-                    <textarea id="abstrak" name="abstrak" rows="3" maxlength="250" placeholder="Tulis abstrak dalam Bahasa Indonesia..." required></textarea>
-                    <span class="char-counter" id="counterAbstrak">0/250 karakter</span>
-                    <span class="error-text" id="errorAbstrak">Abstrak wajib diisi (maksimal 250 karakter).</span>
+                    <label for="abstrak">2. Abstrak (Max 250 karakter) <span class="required-star">*</span></label>
+                    <textarea id="abstrak" rows="3" maxlength="250" required></textarea>
+                    <span class="char-counter" id="counterAbstrak">0/250</span>
+                    <span class="error-text" id="errorAbstrak">Abstrak wajib diisi.</span>
                 </div>
                 <div class="input-group">
-                    <label for="pendahuluan">3. Pendahuluan (Max: 250 Karakter) <span class="required-star">*</span></label>
-                    <textarea id="pendahuluan" name="pendahuluan" rows="3" maxlength="250" placeholder="Tulis pendahuluan..." required></textarea>
-                    <span class="char-counter" id="counterPendahuluan">0/250 karakter</span>
-                    <span class="error-text" id="errorPendahuluan">Pendahuluan wajib diisi (maksimal 250 karakter).</span>
+                    <label for="pendahuluan">3. Pendahuluan (Max 250 karakter) <span class="required-star">*</span></label>
+                    <textarea id="pendahuluan" rows="3" maxlength="250" required></textarea>
+                    <span class="char-counter" id="counterPendahuluan">0/250</span>
+                    <span class="error-text" id="errorPendahuluan">Pendahuluan wajib diisi.</span>
                 </div>
                 <div class="input-group">
-                    <label for="landasanTeori">4. Landasan Teori (Max: 250 Karakter) <span class="required-star">*</span></label>
-                    <textarea id="landasanTeori" name="landasanTeori" rows="3" maxlength="250" placeholder="Tulis landasan teori..." required></textarea>
-                    <span class="char-counter" id="counterLandasanTeori">0/250 karakter</span>
-                    <span class="error-text" id="errorLandasanTeori">Landasan teori wajib diisi (maksimal 250 karakter).</span>
+                    <label for="landasanTeori">4. Landasan Teori (Max 250 karakter) <span class="required-star">*</span></label>
+                    <textarea id="landasanTeori" rows="3" maxlength="250" required></textarea>
+                    <span class="char-counter" id="counterLandasanTeori">0/250</span>
+                    <span class="error-text" id="errorLandasanTeori">Landasan teori wajib diisi.</span>
                 </div>
                 <div class="input-group">
-                    <label for="metodologi">5. Metodologi (Max: 250 Karakter) <span class="required-star">*</span></label>
-                    <textarea id="metodologi" name="metodologi" rows="3" maxlength="250" placeholder="Tulis metodologi penelitian..." required></textarea>
-                    <span class="char-counter" id="counterMetodologi">0/250 karakter</span>
-                    <span class="error-text" id="errorMetodologi">Metodologi wajib diisi (maksimal 250 karakter).</span>
+                    <label for="metodologi">5. Metodologi (Max 250 karakter) <span class="required-star">*</span></label>
+                    <textarea id="metodologi" rows="3" maxlength="250" required></textarea>
+                    <span class="char-counter" id="counterMetodologi">0/250</span>
+                    <span class="error-text" id="errorMetodologi">Metodologi wajib diisi.</span>
                 </div>
 
-                <!-- Upload File Proposal dengan Pratinjau -->
+                <!-- Upload File -->
                 <div class="input-group">
-                    <label>Upload File Proposal (PDF/DOC/DOCX, maks. 10MB) <span class="required-star">*</span></label>
-                    <div class="file-upload-wrapper">
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <span class="material-icons">cloud_upload</span>
-                            <p class="upload-text">Klik atau seret file ke sini</p>
-                            <input type="file" id="fileProposal" name="fileProposal" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
-                        </div>
-                        <div class="file-info" id="fileInfo">
-                            <span class="material-icons">check_circle</span>
-                            <div class="file-details">
-                                <span id="fileName"></span> (<span id="fileSize"></span>)
-                            </div>
-                            <a class="file-preview-btn" id="previewBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">
-                                <span class="material-icons">visibility</span> Pratinjau
-                            </a>
-                        </div>
-                        <span class="error-text" id="errorFile">File proposal wajib diupload (PDF/DOC/DOCX, maks. 10MB).</span>
+                    <label>Upload File Proposal (PDF/DOC/DOCX, maks 10MB) <span class="required-star">*</span></label>
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <span class="material-icons">cloud_upload</span>
+                        <p>Klik atau seret file ke sini</p>
+                        <input type="file" id="fileProposal" accept=".pdf,.doc,.docx" required>
                     </div>
+                    <div class="file-info" id="fileInfo">
+                        <span class="material-icons">check_circle</span>
+                        <span id="fileName"></span> (<span id="fileSize"></span>)
+                        <a class="file-preview-btn" id="previewBtn" href="#" target="_blank">Pratinjau</a>
+                    </div>
+                    <span class="error-text" id="errorFile">File wajib diupload.</span>
                 </div>
 
-                <!-- C. DATA DOSEN PEMBIMBING (dengan datalist dari spreadsheet) -->
+                <!-- Dosen -->
                 <div class="section-title"><span class="material-icons">school</span> C. Data Dosen Pembimbing</div>
-                
-                <!-- Datalist global untuk autocomplete dosen -->
                 <datalist id="dosenDataList"></datalist>
-
                 <div class="dosen-container" id="dosenContainer">
                     <div class="dosen-row" id="dosenRow1">
                         <div class="input-group">
                             <label>Usulan Dosen Pembimbing 1 <span class="required-star">*</span></label>
-                            <input type="text" class="dosen-input" id="dosen1" name="dosen1" list="dosenDataList" placeholder="Ketik atau pilih dari daftar" required>
-                            <span class="error-text">Dosen pembimbing wajib diisi.</span>
+                            <input type="text" class="dosen-input" list="dosenDataList" placeholder="Ketik atau pilih" required>
                         </div>
                     </div>
                 </div>
-                <button type="button" class="btn-add-dosen" id="btnAddDosen" title="Tambah Dosen Pembimbing (maks. 2)">
-                    <span class="material-icons">add_circle_outline</span> Tambah Dosen Pembimbing
-                </button>
+                <button type="button" class="btn-add-dosen" id="btnAddDosen">+ Tambah Dosen</button>
 
-                <div class="submit-section">
-                    <button type="submit" class="btn-submit" id="btnSubmit">
-                        <span class="material-icons">send</span> Kirim Pengajuan
-                    </button>
+                <div style="text-align:center; margin-top:28px;">
+                    <button type="submit" class="btn-submit" id="btnSubmit">Kirim Pengajuan</button>
                 </div>
             </form>
-            <p class="footer-note">* Data akan tersimpan otomatis ke spreadsheet dan file diunggah ke Google Drive.</p>
+            <p class="footer-note">* Data tersimpan di spreadsheet & file diunggah ke Drive.</p>
         </div>
     </div>
 
     <script>
         (function() {
-            // =============================================
-            // KONFIGURASI (Ubah jika diperlukan)
-            // =============================================
-            // URL deployment Apps Script (untuk mode standalone / GitHub Pages)
-            var GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbzc-NyMb-6Po7i9ddRVq1EivUul6YP6IAiIL6Ga7-sxPGu_fihP54_UPdbs5FPh3gMM/exec';
-            
-            // Apakah berjalan di lingkungan Google Apps Script?
-            var IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
-            
-            // =============================================
-            // DOM ELEMENTS
-            // =============================================
+            // Konfigurasi URL deployment (dapat diubah sesuai deployment terbaru)
+            const GAS_DEPLOY_URL = 'https://script.google.com/macros/s/AKfycbyH_lKrX6yxx1NRfgPX-ZoO7DtAxNl9SEflGqUIEMDKV4HfutPpIzrIQR5JWrrZHGhQ/exec';
+            const IS_GAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined' && typeof google.script.run !== 'undefined');
+
             const form = document.getElementById('proposalForm');
             const loadingOverlay = document.getElementById('loadingOverlay');
             const toastContainer = document.getElementById('toastContainer');
-            const semesterBadge = document.getElementById('semesterBadge');
             const dosenContainer = document.getElementById('dosenContainer');
             const btnAddDosen = document.getElementById('btnAddDosen');
-            const btnSubmit = document.getElementById('btnSubmit');
-            const fileUploadArea = document.getElementById('fileUploadArea');
             const fileProposal = document.getElementById('fileProposal');
             const fileInfo = document.getElementById('fileInfo');
-            const fileNameEl = document.getElementById('fileName');
-            const fileSizeEl = document.getElementById('fileSize');
             const previewBtn = document.getElementById('previewBtn');
             const errorFile = document.getElementById('errorFile');
             const dosenDataList = document.getElementById('dosenDataList');
+            const semesterBadge = document.getElementById('semesterBadge');
 
             let dosenCount = 1;
             const MAX_DOSEN = 2;
-            let uploadedFileBase64 = null;
-            let uploadedFileMime = null;
-            let uploadedFileName = null;
+            let uploadedFileBase64 = null, uploadedFileMime = null, uploadedFileName = null;
             let currentFileObjectURL = null;
 
-            // =============================================
-            // TOAST NOTIFICATION
-            // =============================================
-            function showToast(message, type = 'success') {
+            // Toast
+            function showToast(msg, type='success') {
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
-                const icon = type === 'success' ? 'check_circle' : 'error';
-                toast.innerHTML = `<span class="material-icons">${icon}</span> ${message}`;
+                toast.innerHTML = `<span class="material-icons">${type==='success'?'check_circle':'error'}</span> ${msg}`;
                 toastContainer.appendChild(toast);
-                requestAnimationFrame(() => toast.classList.add('show'));
+                setTimeout(() => toast.classList.add('show'), 10);
                 setTimeout(() => {
                     toast.classList.remove('show');
                     setTimeout(() => toast.remove(), 400);
                 }, 4000);
             }
+            function showLoading() { loadingOverlay.classList.add('active'); }
+            function hideLoading() { loadingOverlay.classList.remove('active'); }
 
-            function showLoading() { loadingOverlay.classList.add('active'); btnSubmit.disabled = true; }
-            function hideLoading() { loadingOverlay.classList.remove('active'); btnSubmit.disabled = false; }
-
-            // =============================================
-            // SEMESTER OTOMATIS
-            // =============================================
-            function getSemesterInfo() {
+            // Semester
+            (function() {
                 const now = new Date();
-                const month = now.getMonth() + 1;
-                const year = now.getFullYear();
-                let semester, tahunAjaran;
-                if (month >= 9) { semester = 'Ganjil'; tahunAjaran = year + '/' + (year+1); }
-                else if (month <= 2) { semester = 'Ganjil'; tahunAjaran = (year-1) + '/' + year; }
-                else { semester = 'Genap'; tahunAjaran = (year-1) + '/' + year; }
-                return { semester, tahunAjaran, label: `📅 Semester ${semester} ${tahunAjaran}` };
-            }
-            const semesterInfo = getSemesterInfo();
-            semesterBadge.textContent = semesterInfo.label;
+                const month = now.getMonth()+1, year = now.getFullYear();
+                let sem = (month>=9 || month<=2) ? 'Ganjil' : 'Genap';
+                let ta = (month>=9) ? `${year}/${year+1}` : `${year-1}/${year}`;
+                semesterBadge.textContent = `📅 Semester ${sem} ${ta}`;
+            })();
 
-            // =============================================
-            // LOAD DOSEN LIST (GAS atau fallback)
-            // =============================================
+            // Load daftar dosen
             function loadDosenList() {
                 if (IS_GAS) {
-                    // Jika di dalam Google Apps Script, panggil server-side
-                    google.script.run
-                        .withSuccessHandler(function(dosenArray) {
-                            populateDosenList(dosenArray);
-                        })
-                        .withFailureHandler(function(err) {
-                            console.error('Gagal memuat daftar dosen:', err);
-                            showToast('Gagal memuat daftar dosen, Anda tetap bisa mengetik manual.', 'error');
-                        })
-                        .getDosenList();
+                    google.script.run.withSuccessHandler(populate).getDosenList();
                 } else {
-                    // Jika di luar GAS (GitHub Pages), gunakan data contoh atau kosong
-                    console.warn('Tidak dalam lingkungan GAS. Daftar dosen tidak tersedia dari server.');
-                    // Isi dengan data contoh untuk demonstrasi, atau kosongkan
-                    var sampleDosen = ['Prof. Dr. Budi Santoso', 'Dr. Ani Widyastuti', 'Dr. Cahyo Nugroho', 'Prof. Dr. Dewi Lestari'];
-                    populateDosenList(sampleDosen);
+                    // Fallback data contoh
+                    populate(['Prof. Dr. Budi Santoso', 'Dr. Ani Widyastuti', 'Dr. Cahyo Nugroho', 'Prof. Dr. Dewi Lestari']);
                 }
             }
-
-            function populateDosenList(dosenArray) {
-                if (!Array.isArray(dosenArray) || dosenArray.length === 0) return;
+            function populate(arr) {
                 dosenDataList.innerHTML = '';
-                dosenArray.forEach(function(nama) {
-                    if (nama && String(nama).trim() !== '') {
-                        const option = document.createElement('option');
-                        option.value = String(nama).trim();
-                        dosenDataList.appendChild(option);
-                    }
+                arr.filter(n=>n&&String(n).trim()).forEach(n => {
+                    const opt = document.createElement('option');
+                    opt.value = String(n).trim();
+                    dosenDataList.appendChild(opt);
                 });
-                console.log('✅ Daftar dosen dimuat:', dosenArray.length, 'nama');
             }
-
             loadDosenList();
 
-            // =============================================
-            // CHARACTER COUNTER
-            // =============================================
-            function setupCharCounter(textareaId, counterId) {
-                const textarea = document.getElementById(textareaId);
-                const counter = document.getElementById(counterId);
-                const update = () => {
-                    const len = textarea.value.length;
-                    counter.textContent = `${len}/250 karakter`;
-                    counter.classList.remove('warning','danger');
-                    if (len >= 230 && len < 250) counter.classList.add('warning');
-                    if (len >= 250) counter.classList.add('danger');
-                };
-                textarea.addEventListener('input', update);
-                update();
-            }
-            setupCharCounter('abstrak','counterAbstrak');
-            setupCharCounter('pendahuluan','counterPendahuluan');
-            setupCharCounter('landasanTeori','counterLandasanTeori');
-            setupCharCounter('metodologi','counterMetodologi');
+            // Character counter
+            ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
+                const el = document.getElementById(id);
+                const counter = document.getElementById('counter' + id.charAt(0).toUpperCase()+id.slice(1));
+                el.addEventListener('input', () => {
+                    counter.textContent = `${el.value.length}/250`;
+                });
+            });
 
-            // =============================================
-            // FILE UPLOAD & PRATINJAU
-            // =============================================
-            function resetFileState() {
-                if (currentFileObjectURL) { URL.revokeObjectURL(currentFileObjectURL); currentFileObjectURL = null; }
-                fileInfo.classList.remove('visible');
-                previewBtn.style.display = 'none';
-                previewBtn.href = '#';
-                uploadedFileBase64 = null; uploadedFileMime = null; uploadedFileName = null;
-                fileProposal.value = '';
-                fileProposal.classList.remove('success','error');
-                errorFile.classList.remove('visible');
-            }
-
+            // File upload & preview
             fileProposal.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 errorFile.classList.remove('visible');
-                fileProposal.classList.remove('error');
-                if (currentFileObjectURL) { URL.revokeObjectURL(currentFileObjectURL); currentFileObjectURL = null; }
-                previewBtn.style.display = 'none';
-
-                if (!file) {
-                    fileInfo.classList.remove('visible');
-                    uploadedFileBase64 = null; uploadedFileMime = null; uploadedFileName = null;
-                    return;
-                }
-
-                const allowedTypes = ['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-                const allowedExts = ['.pdf','.doc','.docx'];
-                const ext = '.' + file.name.split('.').pop().toLowerCase();
-
-                if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-                    errorFile.textContent = 'Format file tidak didukung. Gunakan PDF, DOC, atau DOCX.';
-                    errorFile.classList.add('visible');
-                    fileProposal.classList.add('error');
-                    fileInfo.classList.remove('visible');
-                    uploadedFileBase64 = null;
+                if (!file) return;
+                if (!file.type.match(/pdf|msword|wordprocessingml/) && !file.name.match(/\.(pdf|doc|docx)$/i)) {
+                    errorFile.textContent = 'Format tidak didukung.'; errorFile.classList.add('visible');
                     return;
                 }
                 if (file.size > 10*1024*1024) {
-                    errorFile.textContent = 'Ukuran file maksimal 10MB.';
-                    errorFile.classList.add('visible');
-                    fileProposal.classList.add('error');
-                    fileInfo.classList.remove('visible');
-                    uploadedFileBase64 = null;
+                    errorFile.textContent = 'Ukuran maks 10MB.'; errorFile.classList.add('visible');
                     return;
                 }
-
+                if (currentFileObjectURL) URL.revokeObjectURL(currentFileObjectURL);
                 currentFileObjectURL = URL.createObjectURL(file);
-                previewBtn.href = currentFileObjectURL;
-                previewBtn.style.display = 'inline-flex';
-
+                previewBtn.href = currentFileObjectURL; previewBtn.style.display = 'inline-flex';
                 const reader = new FileReader();
                 reader.onload = function(ev) {
-                    const dataUrl = ev.target.result;
-                    uploadedFileBase64 = dataUrl.split(',')[1];
-                    uploadedFileMime = file.type || 'application/octet-stream';
+                    uploadedFileBase64 = ev.target.result.split(',')[1];
+                    uploadedFileMime = file.type;
                     uploadedFileName = file.name;
-                    fileNameEl.textContent = file.name;
-                    const sizeMB = (file.size / (1024*1024)).toFixed(2);
-                    fileSizeEl.textContent = sizeMB + ' MB';
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('fileSize').textContent = (file.size/1024/1024).toFixed(2)+' MB';
                     fileInfo.classList.add('visible');
-                    fileProposal.classList.add('success');
-                    errorFile.classList.remove('visible');
-                };
-                reader.onerror = function() {
-                    errorFile.textContent = 'Gagal membaca file. Coba lagi.';
-                    errorFile.classList.add('visible');
-                    fileProposal.classList.add('error');
-                    fileInfo.classList.remove('visible');
-                    previewBtn.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             });
 
-            fileUploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                fileUploadArea.style.borderColor = '#1a237e';
-                fileUploadArea.style.background = '#e8eaf6';
-            });
-            fileUploadArea.addEventListener('dragleave', function() {
-                fileUploadArea.style.borderColor = '#e0e0e0';
-                fileUploadArea.style.background = '#f5f5f5';
-            });
-            fileUploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                fileUploadArea.style.borderColor = '#e0e0e0';
-                fileUploadArea.style.background = '#f5f5f5';
-                if (e.dataTransfer.files.length > 0) {
-                    fileProposal.files = e.dataTransfer.files;
-                    fileProposal.dispatchEvent(new Event('change'));
-                }
-            });
-
-            // =============================================
-            // DOSEN MANAGEMENT (tambah/hapus baris)
-            // =============================================
-            function updateDosenLabels() {
+            // Dosen management
+            function updateDosenUI() {
                 const rows = dosenContainer.querySelectorAll('.dosen-row');
-                rows.forEach((row, index) => {
-                    const label = row.querySelector('label');
+                rows.forEach((row, idx) => {
                     const input = row.querySelector('input');
-                    const num = index + 1;
-                    label.innerHTML = `Usulan Dosen Pembimbing ${num} ${num === 1 ? '<span class="required-star">*</span>' : ''}`;
-                    input.id = 'dosen' + num;
-                    input.name = 'dosen' + num;
-                    input.setAttribute('list', 'dosenDataList');
-                    if (num === 1) input.setAttribute('required','');
-                    else input.removeAttribute('required');
+                    input.id = 'dosen'+(idx+1);
+                    input.name = 'dosen'+(idx+1);
+                    input.required = (idx === 0);
                 });
                 btnAddDosen.disabled = dosenCount >= MAX_DOSEN;
             }
-
-            function createDosenRow(num) {
-                const row = document.createElement('div');
-                row.className = 'dosen-row';
-                row.id = 'dosenRow' + num;
-                row.innerHTML = `
-                    <div class="input-group">
-                        <label>Usulan Dosen Pembimbing ${num}</label>
-                        <input type="text" class="dosen-input" id="dosen${num}" name="dosen${num}" list="dosenDataList" placeholder="Ketik atau pilih dari daftar">
-                        <span class="error-text">Dosen pembimbing wajib diisi.</span>
-                    </div>
-                    <button type="button" class="btn-icon remove" title="Hapus" aria-label="Hapus Dosen Pembimbing ${num}">
-                        <span class="material-icons">remove_circle</span>
-                    </button>
-                `;
-                row.querySelector('.btn-icon.remove').addEventListener('click', function() {
-                    row.style.animation = 'fadeIn 0.25s ease reverse';
-                    row.addEventListener('animationend', function() {
-                        row.remove();
-                        dosenCount--;
-                        updateDosenLabels();
-                    }, { once: true });
-                });
-                return row;
-            }
-
-            btnAddDosen.addEventListener('click', function() {
+            btnAddDosen.addEventListener('click', () => {
                 if (dosenCount >= MAX_DOSEN) return;
                 dosenCount++;
-                const newRow = createDosenRow(dosenCount);
-                dosenContainer.appendChild(newRow);
-                updateDosenLabels();
-                setTimeout(() => newRow.querySelector('input').focus(), 150);
-            });
-
-            // Tambahkan tombol hapus di dosen pertama
-            const row1 = document.getElementById('dosenRow1');
-            if (!row1.querySelector('.btn-icon.remove')) {
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn-icon remove';
-                removeBtn.title = 'Hapus';
-                removeBtn.setAttribute('aria-label','Hapus Dosen Pembimbing 1');
-                removeBtn.innerHTML = '<span class="material-icons">remove_circle</span>';
-                removeBtn.addEventListener('click', function() {
-                    if (dosenCount <= 1) {
-                        showToast('Minimal 1 Dosen Pembimbing wajib diisi.','error');
-                        return;
-                    }
-                    row1.style.animation = 'fadeIn 0.25s ease reverse';
-                    row1.addEventListener('animationend', function() {
-                        row1.remove();
-                        dosenCount--;
-                        updateDosenLabels();
-                    }, { once: true });
+                const row = document.createElement('div');
+                row.className = 'dosen-row';
+                row.innerHTML = `
+                    <div class="input-group">
+                        <label>Usulan Dosen Pembimbing ${dosenCount}</label>
+                        <input type="text" class="dosen-input" list="dosenDataList" placeholder="Ketik atau pilih">
+                    </div>
+                    <button type="button" class="btn-icon remove">-</button>
+                `;
+                row.querySelector('.remove').addEventListener('click', () => {
+                    row.remove(); dosenCount--;
+                    updateDosenUI();
                 });
-                row1.appendChild(removeBtn);
-            }
-            updateDosenLabels();
-
-            // =============================================
-            // VALIDASI FORM
-            // =============================================
-            function clearAllErrors() {
-                document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
-                document.querySelectorAll('input.error, textarea.error').forEach(el => el.classList.remove('error'));
-                document.querySelectorAll('input.success, textarea.success').forEach(el => el.classList.remove('success'));
-            }
-            function showFieldError(fieldId, errorId) {
-                const field = document.getElementById(fieldId);
-                const errorEl = document.getElementById(errorId);
-                if (field) field.classList.add('error');
-                if (errorEl) errorEl.classList.add('visible');
-            }
-            function showFieldSuccess(fieldId) {
-                const field = document.getElementById(fieldId);
-                if (field) { field.classList.remove('error'); field.classList.add('success'); }
-            }
-            function validateNIM(nim) {
-                const clean = nim.replace(/\D/g,'');
-                return clean.length === 9 && /^20\d{2}03\d{3}$/.test(clean);
-            }
-            function validateNoHP(hp) {
-                const clean = hp.replace(/[\s\-\(\)\+]/g,'');
-                return /^\d+$/.test(clean) && /^(08|628)\d{8,11}$/.test(clean);
-            }
-            function validateEmail(email) {
-                return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
-            }
-
-            document.getElementById('nim').addEventListener('input', function() {
-                const val = this.value.trim();
-                if (val.length === 9 && validateNIM(val)) {
-                    showFieldSuccess('nim');
-                    document.getElementById('errorNim').classList.remove('visible');
-                } else if (val.length === 9 && !validateNIM(val)) {
-                    showFieldError('nim','errorNim');
-                } else if (val.length > 0 && val.length < 9) {
-                    this.classList.remove('success','error');
-                }
+                dosenContainer.appendChild(row);
+                updateDosenUI();
             });
-            document.getElementById('noHp').addEventListener('input', function() {
-                const val = this.value.trim();
-                if (val.length >= 10 && validateNoHP(val)) {
-                    showFieldSuccess('noHp');
-                    document.getElementById('errorNoHp').classList.remove('visible');
-                } else if (val.length >= 10 && !validateNoHP(val)) {
-                    showFieldError('noHp','errorNoHp');
-                }
+            // Hapus di dosen 1
+            document.querySelector('#dosenRow1').insertAdjacentHTML('beforeend', '<button type="button" class="btn-icon remove" style="margin-left:10px">-</button>');
+            document.querySelector('#dosenRow1 .remove').addEventListener('click', function() {
+                if (dosenCount <= 1) { showToast('Minimal 1 Dosen','error'); return; }
+                this.parentElement.remove(); dosenCount--;
+                updateDosenUI();
             });
-            document.getElementById('email').addEventListener('input', function() {
-                const val = this.value.trim();
-                if (val.length > 0 && validateEmail(val)) {
-                    showFieldSuccess('email');
-                    document.getElementById('errorEmail').classList.remove('visible');
-                } else if (val.length > 5 && !validateEmail(val)) {
-                    showFieldError('email','errorEmail');
-                }
-            });
+            updateDosenUI();
 
-            // =============================================
-            // SUBMIT HANDLER (GAS atau fetch)
-            // =============================================
+            // Validasi
+            function validateNIM(nim) { return /^20\d{2}03\d{3}$/.test(nim.replace(/\D/g,'')); }
+            function validateHP(hp) { return /^(08|628)\d{8,11}$/.test(hp.replace(/[^0-9]/g,'')); }
+            function validateEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+            // Submit
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                clearAllErrors();
-                let isValid = true;
-                const firstError = { el: null, offset: Infinity };
+                let valid = true;
+                const setError = (id, msg) => {
+                    document.getElementById('error'+id).textContent = msg;
+                    document.getElementById('error'+id).classList.add('visible');
+                    valid = false;
+                };
+                // Clear errors
+                document.querySelectorAll('.error-text').forEach(el => el.classList.remove('visible'));
 
-                function markInvalid(fieldId, errorId) {
-                    showFieldError(fieldId, errorId);
-                    isValid = false;
-                    const el = document.getElementById(fieldId);
-                    if (el && !firstError.el) { firstError.el = el; firstError.offset = el.getBoundingClientRect().top + window.pageYOffset; }
-                }
-
-                const namaLengkap = document.getElementById('namaLengkap').value.trim();
-                if (!namaLengkap || namaLengkap.length < 3) markInvalid('namaLengkap','errorNamaLengkap');
+                const nama = document.getElementById('namaLengkap').value.trim();
+                if (nama.length < 3) setError('NamaLengkap','Nama minimal 3 karakter.');
                 const nim = document.getElementById('nim').value.trim();
-                if (!nim || !validateNIM(nim)) markInvalid('nim','errorNim');
-                const noHp = document.getElementById('noHp').value.trim();
-                if (!noHp || !validateNoHP(noHp)) markInvalid('noHp','errorNoHp');
+                if (!validateNIM(nim)) setError('Nim','NIM tidak valid.');
+                const hp = document.getElementById('noHp').value.trim();
+                if (!validateHP(hp)) setError('NoHp','No HP tidak valid.');
                 const email = document.getElementById('email').value.trim();
-                if (!email || !validateEmail(email)) markInvalid('email','errorEmail');
-                const judul = document.getElementById('judul').value.trim();
-                if (!judul) markInvalid('judul','errorJudul');
-                const abstrak = document.getElementById('abstrak').value.trim();
-                if (!abstrak) markInvalid('abstrak','errorAbstrak');
-                const pendahuluan = document.getElementById('pendahuluan').value.trim();
-                if (!pendahuluan) markInvalid('pendahuluan','errorPendahuluan');
-                const landasanTeori = document.getElementById('landasanTeori').value.trim();
-                if (!landasanTeori) markInvalid('landasanTeori','errorLandasanTeori');
-                const metodologi = document.getElementById('metodologi').value.trim();
-                if (!metodologi) markInvalid('metodologi','errorMetodologi');
-
-                if (!uploadedFileBase64) {
-                    errorFile.textContent = 'File proposal wajib diupload (PDF/DOC/DOCX, maks. 10MB).';
-                    errorFile.classList.add('visible');
-                    fileProposal.classList.add('error');
-                    isValid = false;
-                    if (!firstError.el) { firstError.el = fileProposal; firstError.offset = fileProposal.getBoundingClientRect().top + window.pageYOffset; }
-                }
-
-                const dosenInputs = dosenContainer.querySelectorAll('.dosen-input');
-                const dosenList = [];
-                dosenInputs.forEach((input, index) => {
-                    const val = input.value.trim();
-                    if (index === 0 && !val) {
-                        input.classList.add('error');
-                        input.parentElement.querySelector('.error-text')?.classList.add('visible');
-                        isValid = false;
-                        if (!firstError.el) { firstError.el = input; firstError.offset = input.getBoundingClientRect().top + window.pageYOffset; }
-                    }
-                    if (val) dosenList.push(val);
+                if (!validateEmail(email)) setError('Email','Email tidak valid.');
+                if (!document.getElementById('judul').value.trim()) setError('Judul','Judul wajib diisi.');
+                ['abstrak','pendahuluan','landasanTeori','metodologi'].forEach(id => {
+                    if (!document.getElementById(id).value.trim()) setError(id.charAt(0).toUpperCase()+id.slice(1), 'Wajib diisi.');
                 });
-
-                if (!isValid) {
-                    if (firstError.el) { firstError.el.scrollIntoView({ behavior: 'smooth', block: 'center' }); firstError.el.focus(); }
-                    showToast('Mohon periksa kembali isian formulir.','error');
-                    return;
+                if (!uploadedFileBase64) {
+                    errorFile.textContent = 'File wajib diupload.'; errorFile.classList.add('visible'); valid = false;
+                }
+                const dosenInputs = dosenContainer.querySelectorAll('.dosen-input');
+                if (!dosenInputs[0].value.trim()) {
+                    setError('Dosen','Dosen 1 wajib diisi.'); // dummy error, bisa diatur lebih spesifik
                 }
 
+                if (!valid) return;
+
+                const dosenList = Array.from(dosenInputs).map(inp => inp.value.trim()).filter(v=>v);
                 const formData = {
-                    namaLengkap, nim: nim.replace(/\D/g,''), noHp: noHp.replace(/[\s\-\(\)\+]/g,''), email,
-                    judul, abstrak, pendahuluan, landasanTeori, metodologi,
+                    namaLengkap: nama,
+                    nim: nim.replace(/\D/g,''),
+                    noHp: hp.replace(/[^0-9]/g,''),
+                    email,
+                    judul: document.getElementById('judul').value.trim(),
+                    abstrak: document.getElementById('abstrak').value.trim(),
+                    pendahuluan: document.getElementById('pendahuluan').value.trim(),
+                    landasanTeori: document.getElementById('landasanTeori').value.trim(),
+                    metodologi: document.getElementById('metodologi').value.trim(),
                     dosenPembimbing: dosenList,
-                    semester: semesterInfo.semester, tahunAjaran: semesterInfo.tahunAjaran,
-                    fileName: uploadedFileName, fileMime: uploadedFileMime, fileBase64: uploadedFileBase64
+                    semester: semesterBadge.textContent.includes('Ganjil') ? 'Ganjil' : 'Genap',
+                    tahunAjaran: semesterBadge.textContent.match(/\d{4}\/\d{4}/)[0],
+                    fileName: uploadedFileName,
+                    fileMime: uploadedFileMime,
+                    fileBase64: uploadedFileBase64
                 };
 
                 showLoading();
 
                 if (IS_GAS) {
-                    // Kirim via google.script.run (bawaan GAS)
                     google.script.run
-                        .withSuccessHandler(function(response) {
-                            handleSubmitResponse(response);
-                        })
-                        .withFailureHandler(function(err) {
-                            hideLoading();
-                            console.error(err);
-                            showToast('❌ Terjadi kesalahan: ' + (err.message || 'Koneksi gagal.'),'error');
-                        })
+                        .withSuccessHandler(handleResponse)
+                        .withFailureHandler(err => { hideLoading(); showToast('Error: '+err.message,'error'); })
                         .processForm(formData);
                 } else {
-                    // Kirim via fetch ke URL deployment (untuk standalone di GitHub Pages)
+                    // Fetch dengan Content-Type 'text/plain' untuk hindari preflight
                     fetch(GAS_DEPLOY_URL, {
                         method: 'POST',
-                        mode: 'cors', // Apps Script harus mengizinkan CORS (lihat catatan)
-                        cache: 'no-cache',
-                        headers: { 'Content-Type': 'application/json' },
-                        redirect: 'follow',
+                        headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(formData)
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        handleSubmitResponse(data);
-                    })
-                    .catch(error => {
-                        hideLoading();
-                        console.error('Fetch error:', error);
-                        showToast('❌ Gagal mengirim data: ' + error.message, 'error');
-                    });
+                    .then(res => res.json())
+                    .then(handleResponse)
+                    .catch(err => { hideLoading(); showToast('Gagal: '+err.message,'error'); });
                 }
             });
 
-            function handleSubmitResponse(response) {
+            function handleResponse(resp) {
                 hideLoading();
-                if (response && response.success) {
-                    showToast('✅ Pengajuan berhasil dikirim! Data tersimpan.','success');
+                if (resp && resp.success) {
+                    showToast('✅ Berhasil dikirim!');
                     form.reset();
-                    resetFileState();
-                    document.querySelectorAll('.char-counter').forEach(c => { c.textContent = '0/250 karakter'; c.classList.remove('warning','danger'); });
-                    const rows = dosenContainer.querySelectorAll('.dosen-row');
-                    rows.forEach((row,i) => { if(i>0) row.remove(); });
-                    dosenCount = 1;
-                    updateDosenLabels();
-                    const firstInput = dosenContainer.querySelector('.dosen-input');
-                    if (firstInput) firstInput.value = '';
-                    document.querySelectorAll('input.success, textarea.success').forEach(el => el.classList.remove('success'));
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    fileInfo.classList.remove('visible');
+                    previewBtn.style.display = 'none';
+                    uploadedFileBase64 = null;
+                    // Reset counters etc.
                 } else {
-                    showToast('❌ ' + ((response && response.message) || 'Gagal mengirim data.'),'error');
+                    showToast('❌ ' + (resp?.message || 'Gagal'), 'error');
                 }
             }
-
-            // Ripple effect tombol submit
-            btnSubmit.addEventListener('click', function(e) {
-                const ripple = document.createElement('span');
-                ripple.className = 'ripple';
-                const rect = btnSubmit.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                ripple.style.width = ripple.style.height = size + 'px';
-                ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
-                ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
-                btnSubmit.appendChild(ripple);
-                ripple.addEventListener('animationend', () => ripple.remove());
-            });
-
-            console.log('✅ Form siap. Mode:', IS_GAS ? 'Google Apps Script' : 'Standalone (fetch)');
         })();
     </script>
 </body>
